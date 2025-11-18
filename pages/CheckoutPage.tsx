@@ -168,12 +168,14 @@ const CheckoutPage: React.FC = () => {
         }
         
         const customerParams = {
+            from_name: 'Magnetify.cz',
+            from_email: 'objednavky@magnetify.cz',
             subject_line: `Potvrzení objednávky č. ${order.orderNumber} - Magnetify.cz`,
             to_email: order.contact.email,
             customer_email: order.contact.email,
             email: order.contact.email,
             to_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            reply_to: order.contact.email,
+            reply_to: 'objednavky@magnetify.cz',
             order_number: order.orderNumber,
             first_name: order.contact.firstName,
             items_html: itemsHtml,
@@ -197,7 +199,7 @@ const CheckoutPage: React.FC = () => {
                 // Use the photoGroupId if available (from Uploadcare) for the group link
                 const photoManagementHtml = item.photoGroupId 
                     ? `<p style="margin-top: 15px;">
-                        <a href="https://uploadcare.com/app/projects/aa96da339a5d48983ea2/groups/${item.photoGroupId}/" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
+                        <a href="https://uploadcare.com/app/projects/85038abaf5d3d8c4b919/groups/${item.photoGroupId}/" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
                             Otevřít skupinu v Uploadcare
                         </a>
                        </p>`
@@ -221,6 +223,8 @@ const CheckoutPage: React.FC = () => {
             : '';
         
         const ownerParams = {
+            from_name: 'Magnetify.cz Objednávky',
+            from_email: 'objednavky@magnetify.cz',
             subject_line: `Nová objednávka č. ${order.orderNumber} (${order.company.isCompany ? order.company.companyName : order.contact.lastName})`,
             order_number: order.orderNumber,
             customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
