@@ -17,7 +17,9 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        window.emailjs.sendForm('service_2pkoish', 'template_ajmxwjd', formRef.current)
+        // Updated Service ID to service_rvzivlq (SMTP)
+        // Updated Template ID to template_rrjt8gk (Contact Us Magnetify)
+        window.emailjs.sendForm('service_rvzivlq', 'template_rrjt8gk', formRef.current)
             .then(() => {
                 setStatus('success');
             }, (error: any) => {
