@@ -247,8 +247,11 @@ const CheckoutPage: React.FC = () => {
             invoice_html: invoiceNoticeHtml,
         };
         
-        await window.emailjs.send('service_2pkoish', 'template_8ax2a2w', ownerParams);
-        await window.emailjs.send('service_2pkoish', 'template_1v2vxgh', customerParams);
+        // Updated to use Magnetify specific templates
+        // Admin notification (Order Confirmation Magnetify)
+        await window.emailjs.send('service_rvzivlq', 'template_n389n7r', ownerParams);
+        // Customer confirmation (Auto-Reply Magnetify)
+        await window.emailjs.send('service_rvzivlq', 'template_wgg5k5o', customerParams);
     };
     
     const triggerMakeWebhook = (order: OrderDetails) => {
