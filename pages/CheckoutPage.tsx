@@ -7,6 +7,8 @@ import { PageWrapper } from '../components/layout/PageWrapper';
 import { FormInput } from '../components/forms/FormInput';
 import { RadioCard } from '../components/forms/RadioCard';
 import { MAKE_WEBHOOK_URL } from '../constants';
+import { SEO } from '../components/SEO';
+import { trackPurchase } from '../utils/analytics';
 
 interface OrderDetails {
     contact: { [key: string]: string };
@@ -126,15 +128,18 @@ const CheckoutPage: React.FC = () => {
     };
 
     const sendEmailNotifications = async (order: OrderDetails) => {
-        // Force init EmailJS just in case it wasn't initialized in AppLayout or script loaded late
-        if (window.emailjs && !window.emailjs.isInitialized) {
-             window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-        }
-
         if (!window.emailjs) {
-            console.error("EmailJS library not loaded!");
-            throw new Error("Emailová služba není dostupná. Zkuste prosím obnovit stránku.");
+            // Safe fallback if library fails to load, though we check in AppLayout
+            try {
+                window.emailjs.init({publicKey: EMAILJS_PUBLIC_KEY});
+            } catch (e) {
+                 console.error("Could not init emailjs", e);
+                 throw new Error("Emailová služba není dostupná.");
+            }
         }
+        
+        // Explicitly set public key on send call for robustness
+        const emailJsConfig = EMAILJS_PUBLIC_KEY;
 
         const vs = order.orderNumber;
         const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
@@ -183,13 +188,17 @@ const CheckoutPage: React.FC = () => {
             customerShippingAddressHtml += `<p><strong>Výdejní místo (Zásilkovna):</strong><br>${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}</p>`;
         }
         
+        // Hardened Customer Params - sending explicit email fields to match any template variable
         const customerParams = {
             from_name: 'Magnetify.cz',
             from_email: 'objednavky@magnetify.cz',
             subject_line: `Potvrzení objednávky č. ${order.orderNumber} - Magnetify.cz`,
+            // Send to multiple variable names to catch all template cases
             to_email: order.contact.email,
             customer_email: order.contact.email,
             email: order.contact.email,
+            recipient_email: order.contact.email,
+            
             to_name: `${order.contact.firstName} ${order.contact.lastName}`,
             reply_to: 'objednavky@magnetify.cz',
             order_number: order.orderNumber,
@@ -199,7 +208,7 @@ const CheckoutPage: React.FC = () => {
             shipping_cost: order.shippingCost,
             payment_cost: order.paymentCost,
             total: order.total,
-            photos_confirmation_html: '', // Removed specific photo confirmation text, generic is fine
+            photos_confirmation_html: '', 
             payment_details_html: paymentDetailsHtml + invoiceNoticeHtml,
             shipping_method: shippingMethodMap[order.shipping],
             shipping_address_html: customerShippingAddressHtml,
@@ -239,8 +248,12 @@ const CheckoutPage: React.FC = () => {
             : '';
         
         const ownerParams = {
-            to_email: 'objednavky@magnetify.cz', // IMPORTANT: Must match "To Email" variable in EmailJS template settings or be the destination
-            email: 'objednavky@magnetify.cz',    // Fallback
+            // IMPORTANT: 'to_email' must map to the variable in the EmailJS template (e.g., {{to_email}}) 
+            // OR be defined in the Email Service settings as the destination.
+            to_email: 'objednavky@magnetify.cz', 
+            email: 'objednavky@magnetify.cz',
+            recipient_email: 'objednavky@magnetify.cz',
+            
             reply_to: order.contact.email,       
             from_name: 'Magnetify.cz Objednávky',
             from_email: 'objednavky@magnetify.cz',
@@ -268,15 +281,14 @@ const CheckoutPage: React.FC = () => {
         
         try {
             console.log("Sending Admin Email...");
-            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_ADMIN, ownerParams, EMAILJS_PUBLIC_KEY);
+            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_ADMIN, ownerParams, emailJsConfig);
             console.log("Admin Email Sent.");
             
             console.log("Sending Customer Email...");
-            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_CUSTOMER, customerParams, EMAILJS_PUBLIC_KEY);
+            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_CUSTOMER, customerParams, emailJsConfig);
             console.log("Customer Email Sent.");
         } catch (error) {
-            console.error("EmailJS Error Detailed:", error);
-            // Rethrow to be caught by the submit handler
+            console.error("EmailJS Failed:", error);
             throw error;
         }
     };
@@ -413,13 +425,33 @@ const CheckoutPage: React.FC = () => {
             };
             
             try {
+                // 1. Send Emails
                 await sendEmailNotifications(orderDetails);
+                
+                // 2. Send to Make.com (Fakturoid)
                 triggerMakeWebhook(orderDetails);
+                
+                // 3. Track Conversion in GA4 / Google Ads
+                trackPurchase({
+                    id: orderDetails.orderNumber,
+                    total: orderDetails.total,
+                    currency: 'CZK',
+                    items: orderDetails.items.map(item => ({
+                        item_id: item.product.id,
+                        item_name: item.product.name,
+                        price: item.price,
+                        quantity: item.quantity
+                    }))
+                });
+
+                // 4. Clear Cart & Redirect
                 dispatch({ type: 'CLEAR_CART' });
                 navigate('/dekujeme', { state: { order: orderDetails } });
+                
             } catch (error: any) {
                 console.error("Order submission failed:", error);
-                setSubmitError(`Odeslání objednávky se nezdařilo. ${error.text || JSON.stringify(error) || 'Zkuste to prosím znovu.'}`);
+                alert(`Upozornění: Objednávka pravděpodobně nebyla zcela dokončena. Chyba: ${error.text || error.message || 'Neznámá chyba'}.`);
+                setSubmitError(`Chyba při zpracování. Kontaktujte nás prosím telefonicky.`);
             } finally {
                 setIsSubmitting(false);
             }
@@ -441,6 +473,7 @@ const CheckoutPage: React.FC = () => {
 
     return (
         <div className="bg-white">
+            <SEO title="Košík" description="Dokončete svou objednávku reklamních předmětů na Magnetify.cz" />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <h1 className="text-3xl font-extrabold tracking-tight text-dark-gray text-center mb-12">Dokončení poptávky / objednávky</h1>
                 <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">

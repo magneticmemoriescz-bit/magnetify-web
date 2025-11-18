@@ -1,7 +1,10 @@
+
 import React from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
 import { PageWrapper } from '../components/layout/PageWrapper';
 import { CartItem } from '../types';
+import { SEO } from '../components/SEO';
+import { Helmet } from 'react-helmet-async';
 
 interface OrderDetails {
     contact: { [key: string]: string };
@@ -26,6 +29,12 @@ const OrderConfirmationPage: React.FC = () => {
 
     return (
         <PageWrapper title="Objednávka přijata">
+            <SEO title="Objednávka přijata" description="Potvrzení Vaší objednávky." />
+            {/* Prevent search engines from indexing the thank you page */}
+            <Helmet>
+                <meta name="robots" content="noindex" />
+            </Helmet>
+
             <div className="text-center py-10 px-6 bg-green-50 rounded-lg border border-green-100">
                 <svg className="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

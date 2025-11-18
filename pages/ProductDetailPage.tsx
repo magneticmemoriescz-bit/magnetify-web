@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { ProductVariant, CartItem } from '../types';
 import { FileUpload, UploadedFilesInfo } from '../components/FileUpload';
+import { SEO } from '../components/SEO';
 
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -57,6 +59,26 @@ const ProductDetailPage: React.FC = () => {
             (orientation === 'portrait' ? product.imageUrl_portrait : product.imageUrl_landscape) || product.imageUrl 
         : product.imageUrl;
 
+    // JSON-LD Structured Data for Google
+    const structuredData = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": product.name,
+        "image": displayImage,
+        "description": product.shortDescription,
+        "brand": {
+            "@type": "Brand",
+            "name": "Magnetify.cz"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": window.location.href,
+            "priceCurrency": "CZK",
+            "price": displayPrice,
+            "availability": "https://schema.org/InStock"
+        }
+    };
+
     const handleFilesChange = (filesInfo: UploadedFilesInfo) => {
         setUploadedPhotoInfo(filesInfo);
         if (filesInfo.photos.length === photoCount) {
@@ -83,6 +105,22 @@ const ProductDetailPage: React.FC = () => {
             ...(isCalendar && { orientation: orientation })
         };
         dispatch({ type: 'ADD_ITEM', payload: cartItem });
+        
+        // Track Add to Cart event
+        if (window.gtag) {
+             window.gtag('event', 'add_to_cart', {
+                currency: 'CZK',
+                value: displayPrice * quantity,
+                items: [{
+                    item_id: product.id,
+                    item_name: product.name,
+                    variant: selectedVariant?.name,
+                    price: displayPrice,
+                    quantity: quantity
+                }]
+             });
+        }
+
         navigate('/kosik');
     };
 
@@ -111,6 +149,18 @@ const ProductDetailPage: React.FC = () => {
 
     return (
         <div className="bg-white">
+            <SEO 
+                title={product.name} 
+                description={product.shortDescription} 
+                image={product.imageUrl}
+                type="product"
+            />
+            <Helmet>
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
+            </Helmet>
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
                     {/* Image gallery */}

@@ -2,7 +2,16 @@
 import React from 'react';
 import { Product } from './types';
 
-// Webhook pro Make.com
+// ---------------------------------------------------------------------------
+// ANALYTICS & MARKETING CONFIGURATION
+// ---------------------------------------------------------------------------
+export const GOOGLE_ANALYTICS_ID = 'G-KSKHR7NNX3';
+// Nahraďte svým ID z Google Ads (vypadá jako AW-123456789)
+export const GOOGLE_ADS_ID = 'AW-XXXXXXXXX'; 
+
+// ---------------------------------------------------------------------------
+// KONFIGURACE MAKE.COM (AUTOMATIZACE)
+// ---------------------------------------------------------------------------
 export const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/ka7qi8xh2kear7rhbyg2re3eg83pfybn';
 
 export const PRODUCTS: Product[] = [
