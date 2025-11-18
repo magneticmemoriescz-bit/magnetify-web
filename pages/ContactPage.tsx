@@ -6,6 +6,10 @@ const ContactPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const formRef = useRef<HTMLFormElement>(null);
 
+    const EMAILJS_SERVICE_ID = 'service_rvzivlq';
+    const EMAILJS_TEMPLATE_ID = 'template_rrjt8gk';
+    const EMAILJS_PUBLIC_KEY = 'sVd3x5rH1tZu6JGUR';
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('sending');
@@ -17,9 +21,15 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        // Updated Service ID to service_rvzivlq (SMTP)
-        // Updated Template ID to template_rrjt8gk (Contact Us Magnetify)
-        window.emailjs.sendForm('service_rvzivlq', 'template_rrjt8gk', formRef.current)
+        if (!window.emailjs) {
+             console.error("EmailJS library not loaded.");
+             setErrorMessage("Odesílání e-mailů není momentálně dostupné.");
+             setStatus('error');
+             return;
+        }
+
+        // Explicitly pass Public Key as 4th argument
+        window.emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formRef.current, EMAILJS_PUBLIC_KEY)
             .then(() => {
                 setStatus('success');
             }, (error: any) => {
