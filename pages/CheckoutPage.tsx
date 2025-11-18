@@ -223,6 +223,9 @@ const CheckoutPage: React.FC = () => {
             : '';
         
         const ownerParams = {
+            to_email: 'objednavky@magnetify.cz', // Added explicit recipient for admin emails
+            email: 'objednavky@magnetify.cz',    // Fallback param often used
+            reply_to: order.contact.email,       // Allow replying directly to customer
             from_name: 'Magnetify.cz Objednávky',
             from_email: 'objednavky@magnetify.cz',
             subject_line: `Nová objednávka č. ${order.orderNumber} (${order.company.isCompany ? order.company.companyName : order.contact.lastName})`,
