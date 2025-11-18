@@ -45,11 +45,12 @@
       }
     </script>
     
-    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
+    <!-- Uploadcare Config MUST be before the script load -->
     <script>
-      UPLOADCARE_PUBLIC_KEY = 'aa96da339a5d48983ea2';
+      UPLOADCARE_PUBLIC_KEY = '85038abaf5d3d8c4b919';
       UPLOADCARE_LOCALE = 'cs';
     </script>
+    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
@@ -63,7 +64,6 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-light-gray text-dark-gray antialiased">
     <div id="root"></div>
