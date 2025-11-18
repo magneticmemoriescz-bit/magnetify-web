@@ -280,22 +280,44 @@ const CheckoutPage: React.FC = () => {
             });
         }
 
+        // Structured payload for easy mapping in Make.com
         const payload = {
             orderNumber: order.orderNumber,
-            contact: {
-                firstName: order.contact.firstName,
-                lastName: order.contact.lastName,
-                email: order.contact.email,
+            created: new Date().toISOString(),
+            email: order.contact.email,
+            // Billing object - Use this for Fakturoid Invoice Address
+            billing: {
+                name: order.company.isCompany ? order.company.companyName : `${order.contact.firstName} ${order.contact.lastName}`,
                 street: order.contact.street,
                 city: order.contact.city,
                 zip: order.contact.zip,
-                // Include company data in payload
-                companyName: order.company.isCompany ? order.company.companyName : '',
-                ico: order.company.isCompany ? order.company.ico : '',
-                dic: order.company.isCompany ? order.company.dic : '',
+                country: 'CZ',
+                ico: order.company.isCompany ? order.company.ico.trim() : '',
+                dic: order.company.isCompany ? order.company.dic.trim() : '',
+                isCompany: order.company.isCompany
+            },
+            // Contact person object - Use this for "Contact Person" in CRM
+            contactPerson: {
+                firstName: order.contact.firstName,
+                lastName: order.contact.lastName,
+                email: order.contact.email
+            },
+            shipping: {
+                method: order.shipping,
+                cost: order.shippingCost,
+                packetaPoint: order.packetaPoint ? {
+                    id: order.packetaPoint.id,
+                    name: order.packetaPoint.name,
+                    street: order.packetaPoint.street
+                } : null
+            },
+            payment: {
+                method: order.payment,
+                cost: order.paymentCost
             },
             items: invoiceItems,
-            isCompany: order.company.isCompany
+            total: order.total,
+            note: order.contact.additionalInfo
         };
         
         fetch(MAKE_WEBHOOK_URL, {
