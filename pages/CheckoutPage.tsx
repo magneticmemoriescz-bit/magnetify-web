@@ -50,6 +50,12 @@ const CheckoutPage: React.FC = () => {
     const [packetaPoint, setPacketaPoint] = useState<any | null>(null);
     const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
+    // EmailJS Configuration
+    const EMAILJS_SERVICE_ID = 'service_rvzivlq';
+    const EMAILJS_PUBLIC_KEY = 'sVd3x5rH1tZu6JGUR';
+    const TEMPLATE_ID_ADMIN = 'template_n389n7r'; // Order Confirmation Magnetify
+    const TEMPLATE_ID_CUSTOMER = 'template_wgg5k5o'; // Auto-Reply Magnetify
+
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -120,6 +126,16 @@ const CheckoutPage: React.FC = () => {
     };
 
     const sendEmailNotifications = async (order: OrderDetails) => {
+        // Force init EmailJS just in case it wasn't initialized in AppLayout or script loaded late
+        if (window.emailjs && !window.emailjs.isInitialized) {
+             window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        }
+
+        if (!window.emailjs) {
+            console.error("EmailJS library not loaded!");
+            throw new Error("Emailová služba není dostupná. Zkuste prosím obnovit stránku.");
+        }
+
         const vs = order.orderNumber;
         const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
         
@@ -223,16 +239,16 @@ const CheckoutPage: React.FC = () => {
             : '';
         
         const ownerParams = {
-            to_email: 'objednavky@magnetify.cz', // Added explicit recipient for admin emails
-            email: 'objednavky@magnetify.cz',    // Fallback param often used
-            reply_to: order.contact.email,       // Allow replying directly to customer
+            to_email: 'objednavky@magnetify.cz', // IMPORTANT: Must match "To Email" variable in EmailJS template settings or be the destination
+            email: 'objednavky@magnetify.cz',    // Fallback
+            reply_to: order.contact.email,       
             from_name: 'Magnetify.cz Objednávky',
             from_email: 'objednavky@magnetify.cz',
             subject_line: `Nová objednávka č. ${order.orderNumber} (${order.company.isCompany ? order.company.companyName : order.contact.lastName})`,
             order_number: order.orderNumber,
             customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
             customer_email: order.contact.email,
-            shipping_details_html: customerShippingAddressHtml, // Reusing the formatted block
+            shipping_details_html: customerShippingAddressHtml, 
             payment_method: paymentMethodMap[order.payment],
             items_html_with_total: `
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
@@ -250,11 +266,19 @@ const CheckoutPage: React.FC = () => {
             invoice_html: invoiceNoticeHtml,
         };
         
-        // Updated to use Magnetify specific templates
-        // Admin notification (Order Confirmation Magnetify)
-        await window.emailjs.send('service_rvzivlq', 'template_n389n7r', ownerParams);
-        // Customer confirmation (Auto-Reply Magnetify)
-        await window.emailjs.send('service_rvzivlq', 'template_wgg5k5o', customerParams);
+        try {
+            console.log("Sending Admin Email...");
+            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_ADMIN, ownerParams, EMAILJS_PUBLIC_KEY);
+            console.log("Admin Email Sent.");
+            
+            console.log("Sending Customer Email...");
+            await window.emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_ID_CUSTOMER, customerParams, EMAILJS_PUBLIC_KEY);
+            console.log("Customer Email Sent.");
+        } catch (error) {
+            console.error("EmailJS Error Detailed:", error);
+            // Rethrow to be caught by the submit handler
+            throw error;
+        }
     };
     
     const triggerMakeWebhook = (order: OrderDetails) => {
@@ -286,6 +310,7 @@ const CheckoutPage: React.FC = () => {
         // Structured payload for easy mapping in Make.com
         const payload = {
             orderNumber: order.orderNumber,
+            variableSymbol: order.orderNumber, // ADDED: Crucial for Fakturoid matching
             created: new Date().toISOString(),
             email: order.contact.email,
             // Billing object - Use this for Fakturoid Invoice Address
@@ -394,7 +419,7 @@ const CheckoutPage: React.FC = () => {
                 navigate('/dekujeme', { state: { order: orderDetails } });
             } catch (error: any) {
                 console.error("Order submission failed:", error);
-                setSubmitError(`Odeslání objednávky se nezdařilo. ${error.text || 'Zkuste to prosím znovu.'}`);
+                setSubmitError(`Odeslání objednávky se nezdařilo. ${error.text || JSON.stringify(error) || 'Zkuste to prosím znovu.'}`);
             } finally {
                 setIsSubmitting(false);
             }
