@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { UploadedPhoto } from '../types';
 
@@ -113,7 +114,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ maxFiles, onFilesChange,
                     {photo.name.toLowerCase().endsWith('.pdf') ? (
                          <span className="text-red-500 font-bold">PDF</span>
                     ) : (
-                        <img src={`${photo.url}-/preview/200x200/`} alt={photo.name} className="w-full h-full object-contain" />
+                        <img 
+                            src={`${photo.url}${photo.url.endsWith('/') ? '' : '/'}-/preview/200x200/`} 
+                            alt={photo.name} 
+                            className="w-full h-full object-contain" 
+                        />
                     )}
                 </div>
               <button
