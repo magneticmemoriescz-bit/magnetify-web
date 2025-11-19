@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useProducts } from '../../context/ProductContext';
@@ -33,13 +34,8 @@ const ScrollToTop = () => {
 export const AppLayout: React.FC = () => {
     const { loading } = useProducts();
 
-    useEffect(() => {
-        if (window.emailjs) {
-            window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
-        } else {
-            console.error("EmailJS script not loaded.");
-        }
-    }, []);
+    // Note: EmailJS initialization is handled explicitly in CheckoutPage and ContactPage 
+    // by passing the publicKey directly to the send() function. This prevents initialization race conditions.
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen">Načítání...</div>;
