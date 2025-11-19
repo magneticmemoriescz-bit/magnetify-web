@@ -4,12 +4,15 @@ import { Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { HOW_IT_WORKS_STEPS } from '../constants';
 import { ProductCard } from '../components/ProductCard';
+import { SEO } from '../components/SEO';
 
 const HomePage: React.FC = () => {
     const { products } = useProducts();
 
     return (
         <>
+            <SEO title="Magnetify.cz | Marketing, který zaujme a drží" description="Výroba magnetické reklamy na zakázku. Magnetické vizitky, firemní kalendáře a označení vozidel. Kvalitní tisk a rychlé dodání." />
+            
             {/* Hero Section with Magnetic Induction Lines */}
             <section className="relative bg-brand-navy flex items-center min-h-[600px] text-white overflow-hidden">
                  {/* Abstract Magnetic Field Background */}
@@ -92,6 +95,14 @@ const HomePage: React.FC = () => {
                                 <ProductCard product={product} index={index} />
                             </div>
                         ))}
+                    </div>
+
+                    {/* Cross-promotion Banner */}
+                    <div className="mt-16 text-center border-t border-gray-200 pt-8 max-w-2xl mx-auto">
+                        <p className="text-gray-600 mb-3">Hledáte originální fotodárky pro své blízké?</p>
+                        <a href="https://www.magneticmemories.cz" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 text-lg font-medium text-brand-primary hover:text-brand-navy hover:underline transition-colors">
+                            Podívejte se i na <span className="font-bold">Magnetic Memories</span> &rarr;
+                        </a>
                     </div>
                 </div>
             </section>
