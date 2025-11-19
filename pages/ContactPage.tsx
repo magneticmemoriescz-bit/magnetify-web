@@ -17,12 +17,7 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        // 1. Ensure EmailJS is initialized
-        if (window.emailjs) {
-             window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
-        }
-
-        // 2. Prepare data mapping manually to ensure template receives correct variables
+        // 1. Prepare data mapping manually to ensure template receives correct variables
         const formData = new FormData(formRef.current);
         
         // Using variables from "Contact Us Magnetify" (template_rrjt8gk) screenshot
@@ -37,13 +32,18 @@ const ContactPage: React.FC = () => {
         };
 
         try {
-            // 3. Send using .send() with GMAIL service
-            await window.emailjs.send(
-                'service_2pkoish', 
-                'template_rrjt8gk', // Contact Us Magnetify
-                templateParams
-            );
-            setStatus('success');
+            // 2. Send using .send() with GMAIL service service_2pkoish and explicit public key
+            if (window.emailjs) {
+                 await window.emailjs.send(
+                    'service_2pkoish', 
+                    'template_rrjt8gk', // Contact Us Magnetify
+                    templateParams,
+                    { publicKey: 'sVd3x5rH1tZu6JGUR' }
+                );
+                setStatus('success');
+            } else {
+                 throw new Error("EmailJS script not loaded.");
+            }
         } catch (error: any) {
             console.error('FAILED to send contact form:', error);
             setErrorMessage(`Odeslání zprávy se nezdařilo: ${error.text || 'Zkuste to prosím znovu.'}`);
