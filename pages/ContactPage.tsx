@@ -25,16 +25,19 @@ const ContactPage: React.FC = () => {
         // 2. Prepare data mapping manually to ensure template receives correct variables
         const formData = new FormData(formRef.current);
         
+        // Using variables from "Contact Us Magnetify" (template_rrjt8gk) screenshot
         const templateParams = {
-            from_name: `${formData.get('first_name')} ${formData.get('last_name')}`,
-            from_email: formData.get('email'),
-            company: formData.get('company') || '',
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            email: formData.get('email'),
             message: formData.get('message'),
-            reply_to: formData.get('email') // This ensures you can click "Reply" in your email client
+            name: `${formData.get('first_name')} ${formData.get('last_name')}`, // Matches {{name}} in From Name
+            company: formData.get('company') || '', // Optional if template uses it
+            reply_to: formData.get('email')
         };
 
         try {
-            // 3. Send using .send() instead of .sendForm() for better reliability
+            // 3. Send using .send()
             await window.emailjs.send(
                 'service_rvzivlq', 
                 'template_rrjt8gk', // Contact Us Magnetify
