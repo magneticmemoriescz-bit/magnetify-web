@@ -6,7 +6,7 @@ const ContactPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const formRef = useRef<HTMLFormElement>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('sending');
         setErrorMessage('');
@@ -17,16 +17,35 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        // Updated Service ID to service_rvzivlq (SMTP)
-        // Updated Template ID to template_rrjt8gk (Contact Us Magnetify)
-        window.emailjs.sendForm('service_rvzivlq', 'template_rrjt8gk', formRef.current)
-            .then(() => {
-                setStatus('success');
-            }, (error: any) => {
-                console.error('FAILED to send contact form:', error);
-                setErrorMessage(`Odeslání zprávy se nezdařilo: ${error.text || 'Zkuste to prosím znovu.'}`);
-                setStatus('error');
-            });
+        // 1. Ensure EmailJS is initialized
+        if (window.emailjs) {
+             window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
+        }
+
+        // 2. Prepare data mapping manually to ensure template receives correct variables
+        const formData = new FormData(formRef.current);
+        
+        const templateParams = {
+            from_name: `${formData.get('first_name')} ${formData.get('last_name')}`,
+            from_email: formData.get('email'),
+            company: formData.get('company') || '',
+            message: formData.get('message'),
+            reply_to: formData.get('email') // This ensures you can click "Reply" in your email client
+        };
+
+        try {
+            // 3. Send using .send() instead of .sendForm() for better reliability
+            await window.emailjs.send(
+                'service_rvzivlq', 
+                'template_rrjt8gk', // Contact Us Magnetify
+                templateParams
+            );
+            setStatus('success');
+        } catch (error: any) {
+            console.error('FAILED to send contact form:', error);
+            setErrorMessage(`Odeslání zprávy se nezdařilo: ${error.text || 'Zkuste to prosím znovu.'}`);
+            setStatus('error');
+        }
     };
 
     // Updated input styles: light blue background, dark navy text for readability
