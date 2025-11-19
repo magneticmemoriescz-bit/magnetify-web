@@ -127,8 +127,6 @@ const CheckoutPage: React.FC = () => {
             console.error("EmailJS is not loaded. Skipping email.");
             return;
         }
-        // Re-init to be safe, though App.tsx does it too
-        window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
 
         const vs = order.orderNumber;
         const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
@@ -257,16 +255,18 @@ const CheckoutPage: React.FC = () => {
             reply_to: 'objednavky@magnetify.cz',
         };
 
+        // Public key must be passed in options for robustness
+        const emailJsOptions = { publicKey: 'sVd3x5rH1tZu6JGUR' };
+
         // 1. Send to Customer - USING GMAIL SERVICE service_2pkoish
         const customerPromise = window.emailjs.send(
             'service_2pkoish', 
             'template_n389n7r', // Order Confirmation Magnetify
-            emailParams
+            emailParams,
+            emailJsOptions
         );
 
         // 2. Send to Admin (Copy) - USING GMAIL SERVICE service_2pkoish
-        // Note: We use the same template but change the email recipient.
-        // This requires the template to have the "To Email" field set to "{{email}}" in the EmailJS Dashboard.
         const adminParams = {
             ...emailParams,
             email: 'objednavky@magnetify.cz', // To Admin
@@ -277,7 +277,8 @@ const CheckoutPage: React.FC = () => {
         const adminPromise = window.emailjs.send(
             'service_2pkoish',
             'template_n389n7r',
-            adminParams
+            adminParams,
+            emailJsOptions
         );
 
         // We use Promise.allSettled to attempt both emails regardless if one fails
