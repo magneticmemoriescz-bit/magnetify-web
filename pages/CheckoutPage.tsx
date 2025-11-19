@@ -240,18 +240,21 @@ const CheckoutPage: React.FC = () => {
         `;
 
         // MATCHING VARIABLES TO "Order Confirmation Magnetify" (template_n389n7r)
+        // Added generic keys (to_email, message) to ensure better compatibility
         const emailParams = {
-            // Variables visible in screenshot
             order_number: order.orderNumber,
             subject_line: `Potvrzení objednávky č. ${order.orderNumber}`,
             customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
+            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
             customer_email: order.contact.email,
+            to_email: order.contact.email, // Standard EmailJS "To" variable
+            email: order.contact.email,
             
-            // The main content block from screenshot "{{{shipping_details_html}}}"
+            // The main content block
             shipping_details_html: fullDetailHtml,
+            message: fullDetailHtml, // Standard EmailJS content variable
             
             // Required for EmailJS routing
-            email: order.contact.email, // To Customer
             reply_to: 'objednavky@magnetify.cz',
         };
 
@@ -267,9 +270,13 @@ const CheckoutPage: React.FC = () => {
         );
 
         // 2. Send to Admin (Copy) - USING GMAIL SERVICE service_2pkoish
+        // CRITICAL: Override to_email so it doesn't go to customer
         const adminParams = {
             ...emailParams,
-            email: 'objednavky@magnetify.cz', // To Admin
+            email: 'objednavky@magnetify.cz', 
+            to_email: 'objednavky@magnetify.cz', // Send TO admin
+            to_name: 'Admin',
+            customer_email: order.contact.email, // Keep this for reference in body
             subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
             reply_to: order.contact.email // Replies go to customer
         };
