@@ -215,14 +215,14 @@ const ProductDetailPage: React.FC = () => {
                                 <h3 className="text-sm text-dark-gray font-medium">Tisková data (Logo/Grafika)</h3>
                                 <div className="text-xs text-gray-500 mb-3">
                                     <p>Nahrajte prosím data v tiskové kvalitě (PDF, JPG, PNG).</p>
-                                    {isCalendar && (
-                                        <div className="mt-4 block">
-                                            <p className="font-bold text-brand-primary">
-                                                Nahrajte prosím 12 fotografií (1 pro každý měsíc).
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
+                                {isCalendar && (
+                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
+                                        <p className="font-bold text-brand-primary text-sm">
+                                            Nahrajte prosím 12 fotografií (1 pro každý měsíc).
+                                        </p>
+                                    </div>
+                                )}
                                 <FileUpload 
                                     maxFiles={photoCount} 
                                     onFilesChange={handleFilesChange} 
