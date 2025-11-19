@@ -46,10 +46,6 @@ const ContactPage: React.FC = () => {
             setStatus('success');
         } catch (error: any) {
             console.error('FAILED to send contact form:', error);
-            // Log the specific error text if available (e.g. "Bad Request")
-            if (error.text) {
-                console.error("EmailJS Error details:", error.text);
-            }
             setErrorMessage(`Odeslání zprávy se nezdařilo: ${error.text || 'Zkuste to prosím znovu.'}`);
             setStatus('error');
         }
