@@ -217,7 +217,7 @@ const ProductDetailPage: React.FC = () => {
                                     <p>Nahrajte prosím data v tiskové kvalitě (PDF, JPG, PNG).</p>
                                 </div>
                                 {isCalendar && (
-                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
+                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md mt-6">
                                         <p className="font-bold text-brand-primary text-sm">
                                             Nahrajte prosím 12 fotografií (1 pro každý měsíc).
                                         </p>
