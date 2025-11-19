@@ -250,14 +250,21 @@ const CheckoutPage: React.FC = () => {
             invoice_html: invoiceNoticeHtml,
         };
         
-        // Updated to use Magnetify specific templates
-        // Admin notification (Order Confirmation Magnetify)
-        await window.emailjs.send('service_rvzivlq', 'template_n389n7r', ownerParams);
-        // Customer confirmation (Auto-Reply Magnetify)
-        await window.emailjs.send('service_rvzivlq', 'template_wgg5k5o', customerParams);
+        // We use Promise.allSettled to attempt both emails regardless if one fails
+        const results = await Promise.allSettled([
+            window.emailjs.send('service_rvzivlq', 'template_n389n7r', ownerParams),
+            window.emailjs.send('service_rvzivlq', 'template_wgg5k5o', customerParams)
+        ]);
+        
+        // Check if at least one failed and log it, but don't throw main error unless everything fails if you want strictness
+        const rejected = results.filter(r => r.status === 'rejected');
+        if (rejected.length > 0) {
+            console.warn("Some emails failed to send:", rejected);
+            throw new Error("Nepodařilo se odeslat některé potvrzovací emaily.");
+        }
     };
     
-    const triggerMakeWebhook = (order: OrderDetails) => {
+    const triggerMakeWebhook = async (order: OrderDetails) => {
         if (!MAKE_WEBHOOK_URL) return;
 
         // Create a clean payload for Fakturoid via Make
@@ -323,11 +330,12 @@ const CheckoutPage: React.FC = () => {
             note: order.contact.additionalInfo
         };
         
-        fetch(MAKE_WEBHOOK_URL, {
+        // Return the fetch promise so we can await it
+        return fetch(MAKE_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).catch(console.error);
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -388,13 +396,33 @@ const CheckoutPage: React.FC = () => {
             };
             
             try {
-                await sendEmailNotifications(orderDetails);
-                triggerMakeWebhook(orderDetails);
+                // 1. Trigger Make Webhook FIRST (Critical Data Persistence)
+                try {
+                    await triggerMakeWebhook(orderDetails);
+                } catch (webhookError) {
+                    console.error("Make webhook failed:", webhookError);
+                    // We continue even if webhook fails, but we log it. 
+                    // Ideally, we would want to retry this server-side, but client-side we proceed.
+                }
+
+                // 2. Send Email Notifications (Secondary)
+                // We wrap this in a separate try-catch so email failure doesn't block the success page
+                try {
+                    await sendEmailNotifications(orderDetails);
+                } catch (emailError) {
+                    console.error("Email notifications failed:", emailError);
+                    // Notification failure shouldn't stop the checkout flow if order data was attempted
+                }
+                
+                // 3. Clear Cart and Redirect
                 dispatch({ type: 'CLEAR_CART' });
                 navigate('/dekujeme', { state: { order: orderDetails } });
+
             } catch (error: any) {
-                console.error("Order submission failed:", error);
-                setSubmitError(`Odeslání objednávky se nezdařilo. ${error.text || 'Zkuste to prosím znovu.'}`);
+                // This catch block is now less likely to be hit for external service errors 
+                // unless something fundamental breaks in logic above
+                console.error("Order processing critical failure:", error);
+                setSubmitError(`Něco se pokazilo. Prosím, kontaktujte nás telefonicky nebo emailem.`);
             } finally {
                 setIsSubmitting(false);
             }
@@ -550,3 +578,4 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
+
