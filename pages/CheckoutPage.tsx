@@ -284,9 +284,6 @@ const CheckoutPage: React.FC = () => {
             console.log("Admin email sent.");
         } catch (error) {
              console.error("Failed to send emails:", error);
-             if (typeof error === 'object' && error !== null && 'text' in error) {
-                 console.error("EmailJS Error details:", (error as any).text);
-             }
              throw error; // Re-throw to be caught in handleSubmit
         }
     };
