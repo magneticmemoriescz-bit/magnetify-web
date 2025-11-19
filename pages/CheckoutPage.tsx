@@ -132,9 +132,9 @@ const CheckoutPage: React.FC = () => {
         if (order.payment === 'prevodem') {
             paymentDetailsHtml = `
                 <div style="margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px;">Platební údaje (Zálohová faktura)</h2>
+                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; font-size: 16px;">Platební údaje (Zálohová faktura)</h2>
                     <p>Prosím uhraďte částku <strong>${order.total} Kč</strong>.</p>
-                    <table style="width: 100%; max-width: 400px; margin: 20px auto; text-align: left;">
+                    <table style="width: 100%; max-width: 400px; margin: 10px 0; text-align: left;">
                        <tr><td style="padding: 5px;">Číslo účtu:</td><td style="padding: 5px; font-weight: bold;">3524601011/3030</td></tr>
                        <tr><td style="padding: 5px;">Částka:</td><td style="padding: 5px; font-weight: bold;">${order.total} Kč</td></tr>
                        <tr><td style="padding: 5px;">Variabilní symbol:</td><td style="padding: 5px; font-weight: bold;">${vs}</td></tr>
@@ -143,22 +143,50 @@ const CheckoutPage: React.FC = () => {
         } else if (order.payment === 'faktura') {
              paymentDetailsHtml = `
                 <div style="margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px;">Platba na fakturu</h2>
+                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; font-size: 16px;">Platba na fakturu</h2>
                     <p>Fakturu se splatností Vám zašleme společně s expedicí zboží.</p>
                 </div>`;
         }
         
-        // This generates <tr> rows for the email table
-        const itemsHtml = order.items.map(item => `
-            <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: left;">${item.product.name} ${item.variant ? `(${item.variant.name})` : ''}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.price * item.quantity} Kč</td>
-            </tr>`).join('');
-        
-        const shippingMethodMap: {[key: string]: string} = { zasilkovna: 'Zásilkovna', posta: 'Česká pošta', osobne: 'Osobní odběr'};
-        const paymentMethodMap: {[key: string]: string} = { prevodem: 'Bankovním převodem', dobirka: 'Na dobírku', faktura: 'Na fakturu (splatnost)'};
-        const additionalInfoHtml = order.contact.additionalInfo ? `<h3 style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">Poznámka k objednávce:</h3><p style="padding: 10px; background-color: #f9f9f9; border-radius: 8px;">${order.contact.additionalInfo.replace(/\n/g, '<br>')}</p>` : '';
+        // List of items
+        const itemsHtml = `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background-color: #f1f5f9;">
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Produkt</th>
+                        <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Ks</th>
+                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Cena</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${order.items.map(item => `
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.product.name} <br><span style="font-size: 12px; color: #666;">${item.variant ? item.variant.name : ''}</span></td>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.price * item.quantity} Kč</td>
+                        </tr>
+                    `).join('')}
+                    <tr>
+                        <td colspan="2" style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Doprava:</td>
+                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${order.shippingCost} Kč</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Platba:</td>
+                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${order.paymentCost} Kč</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc; font-weight: bold;">
+                        <td colspan="2" style="padding: 10px; text-align: right;">Celkem:</td>
+                        <td style="padding: 10px; text-align: right; color: #0066FF;">${order.total} Kč</td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+
+        const additionalInfoHtml = order.contact.additionalInfo ? 
+            `<div style="margin-top: 20px; padding: 15px; background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px;">
+                <strong>Poznámka k objednávce:</strong><br>
+                ${order.contact.additionalInfo.replace(/\n/g, '<br>')}
+             </div>` : '';
         
         // Construct address block with optional company info
         let addressBlock = `<strong>${order.contact.firstName} ${order.contact.lastName}</strong><br>`;
@@ -167,68 +195,61 @@ const CheckoutPage: React.FC = () => {
         }
         addressBlock += `${order.contact.street}<br>${order.contact.zip} ${order.contact.city}`;
 
-        let customerShippingAddressHtml = `<p><strong>Fakturační údaje:</strong><br>${addressBlock}</p>`;
+        let shippingInfoHtml = `<div style="margin-top: 20px;"><strong>Fakturační adresa:</strong><br>${addressBlock}</div>`;
         
         if (order.shipping === 'zasilkovna' && order.packetaPoint) {
-            customerShippingAddressHtml += `<p><strong>Výdejní místo (Zásilkovna):</strong><br>${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}</p>`;
+            shippingInfoHtml += `<div style="margin-top: 10px;"><strong>Výdejní místo (Zásilkovna):</strong><br>${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}</div>`;
         }
         
         // Generate photos section
          const ownerPhotosHtml = order.items
             .filter(item => item.photos && item.photos.length > 0)
             .map(item => {
-                const photoListHtml = `<ol style="margin-top: 10px; padding-left: 20px; font-size: 13px; color: #555; line-height: 1.6;">` +
-                    item.photos.map((photo, index) => `<li><strong>${index + 1}.</strong> <a href="${photo.url}" target="_blank">${photo.name || 'Soubor'}</a></li>`).join('') +
+                const photoListHtml = `<ol style="margin-top: 5px; padding-left: 20px; font-size: 13px; color: #555;">` +
+                    item.photos.map((photo, index) => `<li><a href="${photo.url}" target="_blank">${photo.name || 'Soubor ' + (index + 1)}</a></li>`).join('') +
                     `</ol>`;
-
-                const photoManagementHtml = item.photoGroupId 
-                    ? `<p style="margin-top: 15px;">
-                        <a href="https://uploadcare.com/app/projects/85038abaf5d3d8c4b919/groups/${item.photoGroupId}/" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
-                            Otevřít skupinu v Uploadcare
-                        </a>
-                       </p>`
-                    : ``;
+                
+                const groupLink = item.photoGroupId ? `<br><a href="https://uploadcare.com/app/projects/85038abaf5d3d8c4b919/groups/${item.photoGroupId}/" style="font-size: 12px; color: #2563eb;">(Otevřít skupinu souborů)</a>` : '';
 
                 return `
-                    <div style="padding: 15px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; background-color: #fafafa;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-                            Podklady pro: ${item.product.name} ${item.variant ? `(${item.variant.name})` : ''}
-                        </h4>
+                    <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <strong>${item.product.name}</strong>
                         ${photoListHtml}
-                        ${photoManagementHtml}
+                        ${groupLink}
                     </div>`;
             }).join('');
 
         const photosSectionHtml = ownerPhotosHtml ? 
-            `<div style="margin-top: 20px;">
-                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 5px;">Tisková data</h2>
+            `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #f1f5f9; padding: 10px; font-weight: bold;">Nahraná tisková data</div>
                 ${ownerPhotosHtml}
              </div>`
             : '';
         
-        // Common Parameters for Template
-        // We use 'Order Confirmation Magnetify' (template_n389n7r) for both Customer and Admin to ensure consistency.
+        // COMBINE EVERYTHING INTO ONE HTML BLOCK FOR THE TEMPLATE
+        const fullDetailHtml = `
+            ${itemsHtml}
+            ${shippingInfoHtml}
+            ${additionalInfoHtml}
+            ${paymentDetailsHtml}
+            ${invoiceNoticeHtml}
+            ${photosSectionHtml}
+        `;
+
+        // MATCHING VARIABLES TO "Order Confirmation Magnetify" (template_n389n7r)
         const emailParams = {
+            // Variables visible in screenshot
             order_number: order.orderNumber,
-            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            to_email: order.contact.email,
+            subject_line: `Potvrzení objednávky č. ${order.orderNumber}`,
+            customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
+            customer_email: order.contact.email,
+            
+            // The main content block from screenshot "{{{shipping_details_html}}}"
+            shipping_details_html: fullDetailHtml,
+            
+            // Required for EmailJS routing
+            email: order.contact.email, // To Customer
             reply_to: 'objednavky@magnetify.cz',
-            
-            // Content
-            items_html: itemsHtml, // Expects <tr> rows if table is in template, or just string
-            subtotal: order.subtotal,
-            shipping_cost: order.shippingCost,
-            payment_cost: order.paymentCost,
-            total: order.total,
-            
-            shipping_method: shippingMethodMap[order.shipping],
-            payment_method: paymentMethodMap[order.payment],
-            
-            // HTML Blocks
-            shipping_address_html: customerShippingAddressHtml,
-            payment_details_html: paymentDetailsHtml + invoiceNoticeHtml,
-            additional_info_html: additionalInfoHtml,
-            photos_html: photosSectionHtml, // We include photos in customer email too so they can verify
         };
 
         // 1. Send to Customer
@@ -239,17 +260,16 @@ const CheckoutPage: React.FC = () => {
         );
 
         // 2. Send to Admin (Copy)
-        // We simply change the 'to_email' and 'to_name'
         const adminParams = {
             ...emailParams,
-            to_email: 'objednavky@magnetify.cz',
-            to_name: 'Admin (Nová objednávka)',
-            reply_to: order.contact.email // So admin can hit reply to write to customer
+            email: 'objednavky@magnetify.cz', // To Admin
+            subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
+            reply_to: order.contact.email
         };
         
         const adminPromise = window.emailjs.send(
             'service_rvzivlq',
-            'template_n389n7r', // Same template, just different recipient
+            'template_n389n7r',
             adminParams
         );
 
@@ -260,7 +280,6 @@ const CheckoutPage: React.FC = () => {
         const rejected = results.filter(r => r.status === 'rejected');
         if (rejected.length > 0) {
             console.warn("Some emails failed to send:", rejected);
-            // We throw error only if ALL failed, otherwise we consider it a partial success
             if (rejected.length === 2) {
                 throw new Error("Nepodařilo se odeslat potvrzovací emaily.");
             }
