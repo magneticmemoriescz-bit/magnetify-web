@@ -33,7 +33,7 @@ export const PRODUCTS: Product[] = [
     name: 'Firemní magnetický kalendář',
     price: 990,
     shortDescription: 'Praktický dárek pro vaše partnery a klienty.',
-    description: 'Roční kalendář s vaším logem a grafikou. Skvělý způsob, jak být klientům na očích po celý rok. <strong>Nahrajte prosím 12 fotografií (1 pro každý měsíc).</strong> Vysoce kvalitní tisk na magnetickém podkladu.',
+    description: 'Roční kalendář s vaším logem a grafikou. Skvělý způsob, jak být klientům na očích po celý rok.<br><br><strong>Nahrajte prosím 12 fotografií (1 pro každý měsíc).</strong><br>Vysoce kvalitní tisk na magnetickém podkladu.',
     imageUrl: 'https://i.imgur.com/OUbniet.png',
     gallery: [
       'https://i.imgur.com/OUbniet.png',
