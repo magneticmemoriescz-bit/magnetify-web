@@ -120,6 +120,11 @@ const CheckoutPage: React.FC = () => {
     };
 
     const sendEmailNotifications = async (order: OrderDetails) => {
+        // Ensure EmailJS is initialized
+        if (window.emailjs) {
+             window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
+        }
+
         const vs = order.orderNumber;
         const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
         
@@ -143,6 +148,7 @@ const CheckoutPage: React.FC = () => {
                 </div>`;
         }
         
+        // This generates <tr> rows for the email table
         const itemsHtml = order.items.map(item => `
             <tr>
                 <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: left;">${item.product.name} ${item.variant ? `(${item.variant.name})` : ''}</td>
@@ -167,28 +173,7 @@ const CheckoutPage: React.FC = () => {
             customerShippingAddressHtml += `<p><strong>Výdejní místo (Zásilkovna):</strong><br>${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}</p>`;
         }
         
-        const customerParams = {
-            from_name: 'Magnetify.cz',
-            from_email: 'objednavky@magnetify.cz',
-            subject_line: `Potvrzení objednávky č. ${order.orderNumber} - Magnetify.cz`,
-            to_email: order.contact.email,
-            customer_email: order.contact.email,
-            email: order.contact.email,
-            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            reply_to: 'objednavky@magnetify.cz',
-            order_number: order.orderNumber,
-            first_name: order.contact.firstName,
-            items_html: itemsHtml,
-            subtotal: order.subtotal,
-            shipping_cost: order.shippingCost,
-            payment_cost: order.paymentCost,
-            total: order.total,
-            photos_confirmation_html: '', // Removed specific photo confirmation text, generic is fine
-            payment_details_html: paymentDetailsHtml + invoiceNoticeHtml,
-            shipping_method: shippingMethodMap[order.shipping],
-            shipping_address_html: customerShippingAddressHtml,
-        };
-        
+        // Generate photos section
          const ownerPhotosHtml = order.items
             .filter(item => item.photos && item.photos.length > 0)
             .map(item => {
@@ -196,7 +181,6 @@ const CheckoutPage: React.FC = () => {
                     item.photos.map((photo, index) => `<li><strong>${index + 1}.</strong> <a href="${photo.url}" target="_blank">${photo.name || 'Soubor'}</a></li>`).join('') +
                     `</ol>`;
 
-                // Use the photoGroupId if available (from Uploadcare) for the group link
                 const photoManagementHtml = item.photoGroupId 
                     ? `<p style="margin-top: 15px;">
                         <a href="https://uploadcare.com/app/projects/85038abaf5d3d8c4b919/groups/${item.photoGroupId}/" target="_blank" style="display: inline-block; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px;">
@@ -215,52 +199,71 @@ const CheckoutPage: React.FC = () => {
                     </div>`;
             }).join('');
 
-        const ownerPhotosSectionHtml = ownerPhotosHtml ? 
+        const photosSectionHtml = ownerPhotosHtml ? 
             `<div style="margin-top: 20px;">
                 <h2 style="border-bottom: 1px solid #eee; padding-bottom: 5px;">Tisková data</h2>
                 ${ownerPhotosHtml}
              </div>`
             : '';
         
-        const ownerParams = {
-            to_email: 'objednavky@magnetify.cz', // Added explicit recipient for admin emails
-            email: 'objednavky@magnetify.cz',    // Fallback param often used
-            reply_to: order.contact.email,       // Allow replying directly to customer
-            from_name: 'Magnetify.cz Objednávky',
-            from_email: 'objednavky@magnetify.cz',
-            subject_line: `Nová objednávka č. ${order.orderNumber} (${order.company.isCompany ? order.company.companyName : order.contact.lastName})`,
+        // Common Parameters for Template
+        // We use 'Order Confirmation Magnetify' (template_n389n7r) for both Customer and Admin to ensure consistency.
+        const emailParams = {
             order_number: order.orderNumber,
-            customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            customer_email: order.contact.email,
-            shipping_details_html: customerShippingAddressHtml, // Reusing the formatted block
+            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
+            to_email: order.contact.email,
+            reply_to: 'objednavky@magnetify.cz',
+            
+            // Content
+            items_html: itemsHtml, // Expects <tr> rows if table is in template, or just string
+            subtotal: order.subtotal,
+            shipping_cost: order.shippingCost,
+            payment_cost: order.paymentCost,
+            total: order.total,
+            
+            shipping_method: shippingMethodMap[order.shipping],
             payment_method: paymentMethodMap[order.payment],
-            items_html_with_total: `
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <thead><tr><th style="padding: 10px; border-bottom: 1px solid #ddd; background-color: #f9f9f9; text-align: left;">Produkt</th><th style="padding: 10px; border-bottom: 1px solid #ddd; background-color: #f9f9f9; text-align: center;">Ks</th><th style="padding: 10px; border-bottom: 1px solid #ddd; background-color: #f9f9f9; text-align: right;">Cena</th></tr></thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-                <div style="text-align: right; margin-top: 10px;">
-                    <p>Mezisoučet: ${order.subtotal} Kč</p>
-                    <p>Doprava: ${order.shippingCost} Kč</p>
-                    <p>Platba: ${order.paymentCost} Kč</p>
-                    <h3 style="margin-top: 5px;">Celkem: ${order.total} Kč</h3>
-                </div>`,
-            photos_html: ownerPhotosSectionHtml,
+            
+            // HTML Blocks
+            shipping_address_html: customerShippingAddressHtml,
+            payment_details_html: paymentDetailsHtml + invoiceNoticeHtml,
             additional_info_html: additionalInfoHtml,
-            invoice_html: invoiceNoticeHtml,
+            photos_html: photosSectionHtml, // We include photos in customer email too so they can verify
+        };
+
+        // 1. Send to Customer
+        const customerPromise = window.emailjs.send(
+            'service_rvzivlq', 
+            'template_n389n7r', // Order Confirmation Magnetify
+            emailParams
+        );
+
+        // 2. Send to Admin (Copy)
+        // We simply change the 'to_email' and 'to_name'
+        const adminParams = {
+            ...emailParams,
+            to_email: 'objednavky@magnetify.cz',
+            to_name: 'Admin (Nová objednávka)',
+            reply_to: order.contact.email // So admin can hit reply to write to customer
         };
         
+        const adminPromise = window.emailjs.send(
+            'service_rvzivlq',
+            'template_n389n7r', // Same template, just different recipient
+            adminParams
+        );
+
         // We use Promise.allSettled to attempt both emails regardless if one fails
-        const results = await Promise.allSettled([
-            window.emailjs.send('service_rvzivlq', 'template_n389n7r', ownerParams),
-            window.emailjs.send('service_rvzivlq', 'template_wgg5k5o', customerParams)
-        ]);
+        const results = await Promise.allSettled([customerPromise, adminPromise]);
         
-        // Check if at least one failed and log it, but don't throw main error unless everything fails if you want strictness
+        // Check if at least one failed and log it
         const rejected = results.filter(r => r.status === 'rejected');
         if (rejected.length > 0) {
             console.warn("Some emails failed to send:", rejected);
-            throw new Error("Nepodařilo se odeslat některé potvrzovací emaily.");
+            // We throw error only if ALL failed, otherwise we consider it a partial success
+            if (rejected.length === 2) {
+                throw new Error("Nepodařilo se odeslat potvrzovací emaily.");
+            }
         }
     };
     
@@ -401,17 +404,14 @@ const CheckoutPage: React.FC = () => {
                     await triggerMakeWebhook(orderDetails);
                 } catch (webhookError) {
                     console.error("Make webhook failed:", webhookError);
-                    // We continue even if webhook fails, but we log it. 
-                    // Ideally, we would want to retry this server-side, but client-side we proceed.
+                    // We continue even if webhook fails
                 }
 
                 // 2. Send Email Notifications (Secondary)
-                // We wrap this in a separate try-catch so email failure doesn't block the success page
                 try {
                     await sendEmailNotifications(orderDetails);
                 } catch (emailError) {
                     console.error("Email notifications failed:", emailError);
-                    // Notification failure shouldn't stop the checkout flow if order data was attempted
                 }
                 
                 // 3. Clear Cart and Redirect
@@ -419,8 +419,6 @@ const CheckoutPage: React.FC = () => {
                 navigate('/dekujeme', { state: { order: orderDetails } });
 
             } catch (error: any) {
-                // This catch block is now less likely to be hit for external service errors 
-                // unless something fundamental breaks in logic above
                 console.error("Order processing critical failure:", error);
                 setSubmitError(`Něco se pokazilo. Prosím, kontaktujte nás telefonicky nebo emailem.`);
             } finally {
@@ -578,4 +576,3 @@ const CheckoutPage: React.FC = () => {
 };
 
 export default CheckoutPage;
-
