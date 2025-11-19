@@ -7,6 +7,7 @@ import { PageWrapper } from '../components/layout/PageWrapper';
 import { FormInput } from '../components/forms/FormInput';
 import { RadioCard } from '../components/forms/RadioCard';
 import { MAKE_WEBHOOK_URL } from '../constants';
+import { SEO } from '../components/SEO';
 
 interface OrderDetails {
     contact: { [key: string]: string };
@@ -31,6 +32,9 @@ const CheckoutPage: React.FC = () => {
     
     // Toggle for Company Purchase - Default is TRUE as requested
     const [isCompany, setIsCompany] = useState(true);
+
+    // Terms and Conditions
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -120,10 +124,7 @@ const CheckoutPage: React.FC = () => {
     };
 
     const sendEmailNotifications = async (order: OrderDetails) => {
-        // Ensure EmailJS is initialized
-        if (window.emailjs) {
-             window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
-        }
+        console.log("Starting email notification process...");
 
         const vs = order.orderNumber;
         const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
@@ -252,37 +253,41 @@ const CheckoutPage: React.FC = () => {
             reply_to: 'objednavky@magnetify.cz',
         };
 
-        // 1. Send to Customer
-        const customerPromise = window.emailjs.send(
-            'service_rvzivlq', 
-            'template_n389n7r', // Order Confirmation Magnetify
-            emailParams
-        );
+        const publicKey = 'sVd3x5rH1tZu6JGUR';
 
-        // 2. Send to Admin (Copy)
-        const adminParams = {
-            ...emailParams,
-            email: 'objednavky@magnetify.cz', // To Admin
-            subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
-            reply_to: order.contact.email
-        };
-        
-        const adminPromise = window.emailjs.send(
-            'service_rvzivlq',
-            'template_n389n7r',
-            adminParams
-        );
+        try {
+             // 1. Send to Customer
+            console.log("Sending customer email...");
+            await window.emailjs.send(
+                'service_rvzivlq', 
+                'template_n389n7r', // Order Confirmation Magnetify
+                emailParams,
+                publicKey
+            );
+            console.log("Customer email sent.");
 
-        // We use Promise.allSettled to attempt both emails regardless if one fails
-        const results = await Promise.allSettled([customerPromise, adminPromise]);
-        
-        // Check if at least one failed and log it
-        const rejected = results.filter(r => r.status === 'rejected');
-        if (rejected.length > 0) {
-            console.warn("Some emails failed to send:", rejected);
-            if (rejected.length === 2) {
-                throw new Error("Nepodařilo se odeslat potvrzovací emaily.");
-            }
+            // 2. Send to Admin (Copy)
+            console.log("Sending admin email...");
+            const adminParams = {
+                ...emailParams,
+                email: 'objednavky@magnetify.cz', // To Admin
+                subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
+                reply_to: order.contact.email
+            };
+            
+            await window.emailjs.send(
+                'service_rvzivlq',
+                'template_n389n7r',
+                adminParams,
+                publicKey
+            );
+            console.log("Admin email sent.");
+        } catch (error) {
+             console.error("Failed to send emails:", error);
+             if (typeof error === 'object' && error !== null && 'text' in error) {
+                 console.error("EmailJS Error details:", (error as any).text);
+             }
+             throw error; // Re-throw to be caught in handleSubmit
         }
     };
     
@@ -382,6 +387,9 @@ const CheckoutPage: React.FC = () => {
         if (shippingMethod === 'zasilkovna' && !packetaPoint) errors.packetaPoint = 'Vyberte výdejní místo.';
         if (!paymentMethod) errors.payment = 'Vyberte způsob platby.';
         
+        // Terms validation
+        if (!agreeTerms) errors.terms = 'Musíte souhlasit s obchodními podmínkami.';
+        
         setFormErrors(errors);
 
         if (Object.keys(errors).length === 0) {
@@ -449,6 +457,7 @@ const CheckoutPage: React.FC = () => {
     if (items.length === 0) {
         return (
             <PageWrapper title="Nákupní košík">
+                 <SEO title="Nákupní košík | Magnetify.cz" description="Dokončete svou objednávku magnetických reklamních předmětů." />
                 <div className="text-center py-10">
                     <p className="text-lg text-gray-600">Váš košík je prázdný.</p>
                     <Link to="/produkty" className="mt-6 inline-block bg-brand-primary text-white font-bold py-3 px-8 rounded-md shadow-sm hover:bg-blue-700 transition-colors">
@@ -461,6 +470,7 @@ const CheckoutPage: React.FC = () => {
 
     return (
         <div className="bg-white">
+             <SEO title="Pokladna | Magnetify.cz" description="Zadejte fakturační údaje a dokončete objednávku." />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <h1 className="text-3xl font-extrabold tracking-tight text-dark-gray text-center mb-12">Dokončení poptávky / objednávky</h1>
                 <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
@@ -582,6 +592,29 @@ const CheckoutPage: React.FC = () => {
                         </dl>
                         
                         <div className="mt-6">
+                            {/* Terms and Conditions Checkbox */}
+                            <div className="flex items-start mb-4">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="terms"
+                                        name="terms"
+                                        type="checkbox"
+                                        checked={agreeTerms}
+                                        onChange={(e) => {
+                                            setAgreeTerms(e.target.checked);
+                                            setFormErrors(prev => ({...prev, terms: ''}));
+                                        }}
+                                        className="focus:ring-brand-primary h-4 w-4 text-brand-primary border-gray-300 rounded cursor-pointer"
+                                    />
+                                </div>
+                                <div className="ml-3 text-sm">
+                                    <label htmlFor="terms" className="font-medium text-gray-700 select-none cursor-pointer">
+                                        Souhlasím s <Link to="/obchodni-podminky" target="_blank" className="text-brand-primary hover:underline">obchodními podmínkami</Link>
+                                    </label>
+                                </div>
+                            </div>
+                            {formErrors.terms && <p className="text-sm text-red-500 mb-4">{formErrors.terms}</p>}
+
                             {submitError && <p className="text-red-600 text-sm text-center mb-4 bg-red-50 p-2 rounded border border-red-200">{submitError}</p>}
                             <button type="submit" disabled={isSubmitting} className="w-full bg-brand-primary border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                                 {isSubmitting ? 'Zpracovávám...' : 'Závazně objednat'}
