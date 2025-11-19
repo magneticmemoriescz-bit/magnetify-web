@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { SEO } from '../components/SEO';
 
 const ContactPage: React.FC = () => {
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -17,11 +18,6 @@ const ContactPage: React.FC = () => {
             return;
         }
 
-        // 1. Ensure EmailJS is initialized
-        if (window.emailjs) {
-             window.emailjs.init({publicKey: 'sVd3x5rH1tZu6JGUR'});
-        }
-
         // 2. Prepare data mapping manually to ensure template receives correct variables
         const formData = new FormData(formRef.current);
         
@@ -36,16 +32,24 @@ const ContactPage: React.FC = () => {
             reply_to: formData.get('email')
         };
 
+        const publicKey = 'sVd3x5rH1tZu6JGUR';
+
         try {
-            // 3. Send using .send()
+            // 3. Send using .send() explicit parameters
             await window.emailjs.send(
                 'service_rvzivlq', 
                 'template_rrjt8gk', // Contact Us Magnetify
-                templateParams
+                templateParams,
+                publicKey
             );
+            console.log("Contact email sent successfully");
             setStatus('success');
         } catch (error: any) {
             console.error('FAILED to send contact form:', error);
+            // Log the specific error text if available (e.g. "Bad Request")
+            if (error.text) {
+                console.error("EmailJS Error details:", error.text);
+            }
             setErrorMessage(`Odeslání zprávy se nezdařilo: ${error.text || 'Zkuste to prosím znovu.'}`);
             setStatus('error');
         }
@@ -56,10 +60,16 @@ const ContactPage: React.FC = () => {
     
     return (
         <div className="bg-white py-16 px-4 overflow-hidden sm:px-6 lg:px-8 lg:py-24">
+             <SEO title="Kontakt | Magnetify.cz" description="Máte dotaz? Kontaktujte nás. Výroba magnetické reklamy na zakázku." />
             <div className="relative max-w-xl mx-auto">
                 <div className="text-center">
                     <h2 className="text-3xl font-extrabold tracking-tight text-dark-gray sm:text-4xl">Kontaktujte nás</h2>
                     <p className="mt-4 text-lg leading-6 text-gray-500">Máte dotaz, poptávku na velký odběr nebo speciální přání? Neváhejte se na nás obrátit.</p>
+                    
+                    <p className="mt-6 text-lg text-gray-600">
+                        Můžete nám také napsat přímo na email:<br />
+                        <a href="mailto:objednavky@magnetify.cz" className="text-brand-primary font-bold hover:underline text-xl">objednavky@magnetify.cz</a>
+                    </p>
                 </div>
                 <div className="mt-12">
                     {status === 'success' ? (
