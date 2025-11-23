@@ -1,15 +1,19 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { HOW_IT_WORKS_STEPS } from '../constants';
 import { ProductCard } from '../components/ProductCard';
+import { SEO } from '../components/SEO';
 
 const HomePage: React.FC = () => {
     const { products } = useProducts();
 
     return (
         <>
+            <SEO 
+                title="Marketing, který zaujme a drží" 
+                description="Specializujeme se na magnetickou reklamu pro firmy. Vizitky, polepy aut a kalendáře, které klienti nevyhodí."
+            />
             {/* Hero Section with Magnetic Induction Lines */}
             <section className="relative bg-brand-navy flex items-center min-h-[600px] text-white overflow-hidden">
                  {/* Abstract Magnetic Field Background */}
