@@ -1,5 +1,4 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect } from 'react';
 
 interface SEOProps {
   title: string;
@@ -18,24 +17,36 @@ export const SEO: React.FC<SEOProps> = ({
 }) => {
   const fullTitle = `${title} | Magnetify.cz`;
 
-  return (
-    <Helmet>
-      {/* Standard Metadata */}
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+  useEffect(() => {
+    // Standard Metadata
+    document.title = fullTitle;
+    
+    const setMeta = (name: string, content: string, attribute = 'name') => {
+      let element = document.querySelector(`meta[${attribute}="${name}"]`);
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attribute, name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
 
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content={type} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
-      {url && <meta property="og:url" content={url} />}
+    setMeta('description', description);
+    
+    // Open Graph
+    setMeta('og:type', type, 'property');
+    setMeta('og:title', fullTitle, 'property');
+    setMeta('og:description', description, 'property');
+    setMeta('og:image', image, 'property');
+    setMeta('og:url', url, 'property');
 
-      {/* Twitter */}
-      <meta property="twitter:card" content="summary_large_image" />
-      <meta property="twitter:title" content={fullTitle} />
-      <meta property="twitter:description" content={description} />
-      <meta property="twitter:image" content={image} />
-    </Helmet>
-  );
+    // Twitter
+    setMeta('twitter:card', 'summary_large_image', 'property');
+    setMeta('twitter:title', fullTitle, 'property');
+    setMeta('twitter:description', description, 'property');
+    setMeta('twitter:image', image, 'property');
+
+  }, [fullTitle, description, image, url, type]);
+
+  return null;
 };
