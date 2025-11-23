@@ -20,21 +20,25 @@ const ContactPage: React.FC = () => {
         // 1. Prepare data mapping manually to ensure template receives correct variables
         const formData = new FormData(formRef.current);
         
-        // Using generic keys (to_email, message, etc.) to be safe
+        const email = formData.get('email') as string;
+        const firstName = formData.get('first_name') as string;
+        const lastName = formData.get('last_name') as string;
+        const message = formData.get('message') as string;
+        const company = (formData.get('company') as string) || '';
+
+        // Explicitly define params for the template
         const templateParams = {
-            first_name: formData.get('first_name') as string,
-            last_name: formData.get('last_name') as string,
-            email: formData.get('email') as string,
-            message: formData.get('message') as string,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            message: message,
+            company: company,
             
-            // Standard EmailJS variables
-            to_name: 'Magnetify', // Sent to admin
-            to_email: 'objednavky@magnetify.cz', // Ensure it goes to admin
-            from_name: `${formData.get('first_name')} ${formData.get('last_name')}`,
-            from_email: formData.get('email') as string,
-            
-            company: (formData.get('company') as string) || '', 
-            reply_to: formData.get('email') as string
+            // Standard EmailJS keys
+            to_name: 'Magnetify', 
+            to_email: 'objednavky@magnetify.cz', // Target
+            from_name: `${firstName} ${lastName}`,
+            reply_to: email
         };
 
         try {
