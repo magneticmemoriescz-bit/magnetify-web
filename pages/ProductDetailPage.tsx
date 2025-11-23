@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { ProductVariant, CartItem } from '../types';
 import { FileUpload, UploadedFilesInfo } from '../components/FileUpload';
+import { SEO } from '../components/SEO';
 
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -43,7 +43,12 @@ const ProductDetailPage: React.FC = () => {
     }, [id, products]);
 
     if (!product) {
-        return <div className="text-center py-20">Produkt nenalezen.</div>;
+        return (
+            <>
+                <SEO title="Produkt nenalezen" />
+                <div className="text-center py-20">Produkt nenalezen.</div>
+            </>
+        );
     }
 
     const photoCount = selectedVariant ? selectedVariant.photoCount : product.requiredPhotos;
@@ -111,6 +116,12 @@ const ProductDetailPage: React.FC = () => {
 
     return (
         <div className="bg-white">
+            <SEO 
+                title={product.name} 
+                description={product.shortDescription}
+                image={product.imageUrl}
+                url={`https://magnetify.cz/produkty/${product.id}`}
+            />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
                     {/* Image gallery */}
@@ -217,7 +228,7 @@ const ProductDetailPage: React.FC = () => {
                                     <p>Nahrajte prosím data v tiskové kvalitě (PDF, JPG, PNG).</p>
                                 </div>
                                 {isCalendar && (
-                                    <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md mt-6">
+                                    <div className="mt-6 mb-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
                                         <p className="font-bold text-brand-primary text-sm">
                                             Nahrajte prosím 12 fotografií (1 pro každý měsíc).
                                         </p>
