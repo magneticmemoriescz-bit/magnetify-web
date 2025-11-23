@@ -239,48 +239,58 @@ const CheckoutPage: React.FC = () => {
             ${photosSectionHtml}
         `;
 
-        // MATCHING VARIABLES TO "Order Confirmation Magnetify" (template_n389n7r)
-        // Added generic keys (to_email, message) to ensure better compatibility
-        const emailParams = {
-            order_number: order.orderNumber,
-            subject_line: `Potvrzení objednávky č. ${order.orderNumber}`,
-            customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            customer_email: order.contact.email,
-            to_email: order.contact.email, // Standard EmailJS "To" variable
-            email: order.contact.email,
-            
-            // The main content block
-            shipping_details_html: fullDetailHtml,
-            message: fullDetailHtml, // Standard EmailJS content variable
-            
-            // Required for EmailJS routing
-            reply_to: 'objednavky@magnetify.cz',
-        };
-
         // Public key must be passed in options for robustness
         const emailJsOptions = { publicKey: 'sVd3x5rH1tZu6JGUR' };
+
+        // 1. Customer Email Params
+        // Explicitly map variables to avoid confusion
+        const customerParams = {
+            order_number: order.orderNumber,
+            subject_line: `Potvrzení objednávky č. ${order.orderNumber}`,
+            to_name: `${order.contact.firstName} ${order.contact.lastName}`,
+            to_email: order.contact.email, // The main destination for customer
+            email: order.contact.email,    // Fallback for templates using {{email}}
+            
+            // Content
+            message: fullDetailHtml,
+            shipping_details_html: fullDetailHtml,
+            
+            // Headers
+            from_name: 'Magnetify',
+            reply_to: 'objednavky@magnetify.cz'
+        };
+
+        // 2. Admin Email Params
+        // Explicitly set TO address to admin, and REPLY-TO to customer
+        const adminParams = {
+            order_number: order.orderNumber,
+            subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
+            to_name: 'Admin',
+            to_email: 'objednavky@magnetify.cz', // The main destination for admin
+            email: 'objednavky@magnetify.cz',    // Fallback
+            
+            // Content
+            message: fullDetailHtml,
+            shipping_details_html: fullDetailHtml,
+            
+            // Headers
+            from_name: 'Magnetify E-shop',
+            reply_to: order.contact.email, // Reply to the customer directly
+            
+            // Extra meta data for admin reference
+            customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
+            customer_email: order.contact.email
+        };
 
         // 1. Send to Customer - USING GMAIL SERVICE service_2pkoish
         const customerPromise = window.emailjs.send(
             'service_2pkoish', 
             'template_n389n7r', // Order Confirmation Magnetify
-            emailParams,
+            customerParams,
             emailJsOptions
         );
 
         // 2. Send to Admin (Copy) - USING GMAIL SERVICE service_2pkoish
-        // CRITICAL: Override to_email so it doesn't go to customer
-        const adminParams = {
-            ...emailParams,
-            email: 'objednavky@magnetify.cz', 
-            to_email: 'objednavky@magnetify.cz', // Send TO admin
-            to_name: 'Admin',
-            customer_email: order.contact.email, // Keep this for reference in body
-            subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
-            reply_to: order.contact.email // Replies go to customer
-        };
-        
         const adminPromise = window.emailjs.send(
             'service_2pkoish',
             'template_n389n7r',
