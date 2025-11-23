@@ -338,14 +338,23 @@ const CheckoutPage: React.FC = () => {
             });
         }
 
+        // Determine the correct name for the subject (contact/invoice)
+        // If it's a company, use company name. If not, use first + last name.
+        const subjectName = order.company.isCompany && order.company.companyName 
+            ? order.company.companyName 
+            : `${order.contact.firstName} ${order.contact.lastName}`;
+
         // Structured payload for easy mapping in Make.com
         const payload = {
             orderNumber: order.orderNumber,
             created: new Date().toISOString(),
             email: order.contact.email,
+            // Guaranteed field for Fakturoid Subject Name to prevent 422 error
+            subjectName: subjectName,
+            
             // Billing object - Use this for Fakturoid Invoice Address
             billing: {
-                name: order.company.isCompany ? order.company.companyName : `${order.contact.firstName} ${order.contact.lastName}`,
+                name: subjectName,
                 street: order.contact.street,
                 city: order.contact.city,
                 zip: order.contact.zip,
