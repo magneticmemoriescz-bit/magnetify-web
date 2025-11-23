@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
 import { PageWrapper } from '../components/layout/PageWrapper';
 import { CartItem } from '../types';
@@ -19,6 +20,18 @@ interface OrderDetails {
 const OrderConfirmationPage: React.FC = () => {
     const location = useLocation();
     const order = location.state?.order as OrderDetails | undefined;
+
+    useEffect(() => {
+        // Send conversion event to Google Ads
+        if (order && window.gtag) {
+            window.gtag('event', 'conversion', {
+                'send_to': 'AW-17736455369/Y3b4CIOpscUbEMmps4lC',
+                'value': order.total,
+                'currency': 'CZK',
+                'transaction_id': order.orderNumber
+            });
+        }
+    }, [order]);
 
     if (!order) {
         return <Navigate to="/" replace />;
