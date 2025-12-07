@@ -15,7 +15,7 @@ const HomePage: React.FC = () => {
                 description="Specializujeme se na magnetickou reklamu pro firmy. Vizitky, polepy aut a kalendáře, které klienti nevyhodí."
             />
             {/* Hero Section with Magnetic Induction Lines */}
-            <section className="relative bg-brand-navy flex items-center min-h-[600px] text-white overflow-hidden">
+            <section className="relative bg-brand-navy flex items-center min-h-[300px] lg:min-h-[380px] text-white overflow-hidden">
                  {/* Abstract Magnetic Field Background */}
                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute inset-0 bg-brand-navy"></div>
@@ -42,19 +42,19 @@ const HomePage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-brand-navy/20 via-transparent to-brand-navy"></div>
                 </div>
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12">
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-8">
                     <div className="max-w-3xl">
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+                        <h1 className="text-2xl md:text-4xl font-bold tracking-tight leading-tight">
                             Magnetická reklama, která <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-primary">zaujme.</span>
                         </h1>
-                        <p className="mt-6 text-xl text-gray-200 leading-relaxed font-light">
+                        <p className="mt-3 text-base md:text-lg text-gray-200 leading-relaxed font-light">
                             <span className="font-semibold text-white">Marketing, který zaujme a drží.</span> Tisk na míru pro živnostníky i korporace.
                         </p>
-                        <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                            <Link to="/produkty" className="inline-flex justify-center items-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-gradient-to-r from-brand-primary to-brand-accent hover:brightness-110 shadow-lg shadow-brand-primary/40 transition-all transform hover:scale-105 md:py-4 md:text-lg md:px-10">
+                        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                            <Link to="/produkty" className="inline-flex justify-center items-center px-5 py-2.5 border border-transparent text-sm md:text-base font-bold rounded-full text-white bg-gradient-to-r from-brand-primary to-brand-accent hover:brightness-110 shadow-lg shadow-brand-primary/40 transition-all transform hover:scale-105">
                                 Prohlédnout produkty
                             </Link>
-                            <Link to="/jak-to-funguje" className="inline-flex justify-center items-center px-8 py-3 border-2 border-brand-accent text-base font-bold rounded-full text-brand-accent hover:bg-brand-accent hover:text-brand-navy transition-all md:py-4 md:text-lg md:px-10">
+                            <Link to="/jak-to-funguje" className="inline-flex justify-center items-center px-5 py-2.5 border-2 border-brand-accent text-sm md:text-base font-bold rounded-full text-brand-accent hover:bg-brand-accent hover:text-brand-navy transition-all">
                                 Jak to funguje
                             </Link>
                         </div>
@@ -63,34 +63,34 @@ const HomePage: React.FC = () => {
             </section>
             
             {/* B2B Benefits */}
-            <section className="py-16 bg-white border-b border-gray-100">
+            <section className="py-8 bg-white border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
-                            <h3 className="text-xl font-bold text-brand-navy mb-2">Netradiční formát</h3>
-                            <p className="text-gray-600">Obyčejnou vizitku každý dostal již tolikrát, že už nikoho nezaujme. Magnetická vizitka nebo kalendář ale zaujme díky své originalitě i praktičnosti.</p>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                            <h3 className="text-base md:text-lg font-bold text-brand-navy mb-1">Netradiční formát</h3>
+                            <p className="text-sm text-gray-600">Obyčejnou vizitku každý dostal již tolikrát, že už nikoho nezaujme. Magnetická vizitka zaujme originalitou.</p>
                         </div>
-                        <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
-                            <h3 className="text-xl font-bold text-brand-navy mb-2">Zapamatovatelnost</h3>
-                            <p className="text-gray-600">Magnetická vizitka neskončí v koši. Klienti si ji dají na lednici nebo magnetickou nástěnku a mají vás stále na očích.</p>
+                        <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                            <h3 className="text-base md:text-lg font-bold text-brand-navy mb-1">Zapamatovatelnost</h3>
+                            <p className="text-sm text-gray-600">Magnetická vizitka neskončí v koši. Klienti si ji dají na lednici a mají vás stále na očích.</p>
                         </div>
-                        <div className="p-8 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
-                            <h3 className="text-xl font-bold text-brand-navy mb-2">Množstevní slevy</h3>
-                            <p className="text-gray-600">Vybavte celou firmu nebo připravte merch na veletrh. Nabízíme výhodné ceny pro větší odběry.</p>
+                        <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                            <h3 className="text-base md:text-lg font-bold text-brand-navy mb-1">Množstevní slevy</h3>
+                            <p className="text-sm text-gray-600">Vybavte celou firmu nebo připravte merch na veletrh. Nabízíme výhodné ceny pro větší odběry.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Product Overview Section */}
-            <section className="py-16 sm:py-24 bg-light-gray">
+            <section className="py-12 bg-light-gray">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <h2 className="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent tracking-wide uppercase">Portfolio</h2>
-                        <p className="mt-1 text-3xl font-extrabold text-dark-gray sm:text-4xl">Řešení pro vaši firmu</p>
+                    <div className="text-center mb-10">
+                        <h2 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent tracking-wide uppercase">Portfolio</h2>
+                        <p className="mt-1 text-2xl font-extrabold text-dark-gray sm:text-3xl">Řešení pro vaši firmu</p>
                     </div>
                     
-                    <div className="flex flex-wrap justify-center gap-8">
+                    <div className="flex flex-wrap justify-center gap-6">
                         {products.map((product, index) => (
                             <div key={product.id} className="w-full max-w-sm flex">
                                 <ProductCard product={product} index={index} />
@@ -98,8 +98,8 @@ const HomePage: React.FC = () => {
                         ))}
                     </div>
 
-                    <div className="mt-16 text-center border-t border-gray-200 pt-8">
-                         <p className="text-gray-600 text-lg">
+                    <div className="mt-12 text-center border-t border-gray-200 pt-6">
+                         <p className="text-gray-600 text-base">
                             Pokud hledáte dárek pro vaše blízké, podívejte se i na <a href="https://www.magneticmemories.cz" target="_blank" className="text-brand-primary font-bold hover:underline">Magnetic Memories</a>.
                          </p>
                     </div>
@@ -107,26 +107,26 @@ const HomePage: React.FC = () => {
             </section>
 
              {/* How It Works Section */}
-            <section className="py-16 sm:py-24 bg-white">
+            <section className="py-12 sm:py-16 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h2 className="text-3xl font-extrabold text-dark-gray">Realizace zakázky</h2>
-                        <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Zvládneme kusovou výrobu i tisíce kusů pro vaši kampaň.</p>
+                        <h2 className="text-2xl font-extrabold text-dark-gray">Realizace zakázky</h2>
+                        <p className="mt-3 max-w-2xl text-lg text-gray-500 mx-auto">Zvládneme kusovou výrobu i tisíce kusů pro vaši kampaň.</p>
                     </div>
-                    <div className="mt-16 grid md:grid-cols-4 gap-10">
+                    <div className="mt-12 grid md:grid-cols-4 gap-8">
                         {HOW_IT_WORKS_STEPS.map((step, index) => (
                              <div key={index} className="text-center group">
-                                 <div className="flex items-center justify-center h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-brand-primary to-brand-navy text-white shadow-lg group-hover:scale-110 transition-transform">
+                                 <div className="flex items-center justify-center h-14 w-14 mx-auto rounded-xl bg-gradient-to-br from-brand-primary to-brand-navy text-white shadow-lg group-hover:scale-110 transition-transform">
                                      {step.icon}
                                  </div>
-                                 <h3 className="mt-6 text-lg font-bold text-dark-gray">{step.title}</h3>
-                                 <p className="mt-2 text-sm text-gray-500">{step.description}</p>
+                                 <h3 className="mt-4 text-base font-bold text-dark-gray">{step.title}</h3>
+                                 <p className="mt-1 text-sm text-gray-500">{step.description}</p>
                              </div>
                         ))}
                     </div>
                     
-                    <div className="mt-16 text-center">
-                        <Link to="/kontakt" className="inline-flex items-center text-brand-primary font-bold hover:text-brand-navy transition-colors text-lg">
+                    <div className="mt-12 text-center">
+                        <Link to="/kontakt" className="inline-flex items-center text-brand-primary font-bold hover:text-brand-navy transition-colors text-base">
                             Potřebujete individuální kalkulaci? Napište nám <span aria-hidden="true" className="ml-2">&rarr;</span>
                         </Link>
                     </div>
