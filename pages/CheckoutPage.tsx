@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -21,6 +20,7 @@ interface OrderDetails {
     paymentCost: number;
     orderNumber: string;
     agreedToTerms: boolean;
+    marketingConsent: boolean;
 }
 
 const CheckoutPage: React.FC = () => {
@@ -33,11 +33,13 @@ const CheckoutPage: React.FC = () => {
     // Toggle for Company Purchase - Default is TRUE as requested
     const [isCompany, setIsCompany] = useState(true);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [marketingConsent, setMarketingConsent] = useState(false);
 
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
         email: '',
+        phone: '',
         street: '',
         city: '',
         zip: '',
@@ -129,131 +131,196 @@ const CheckoutPage: React.FC = () => {
         }
 
         const vs = order.orderNumber;
-        const invoiceNoticeHtml = `<p style="margin-top:20px; color: #555;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
         
-        let paymentDetailsHtml = '';
-        if (order.payment === 'prevodem') {
-            paymentDetailsHtml = `
-                <div style="margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; font-size: 16px;">Platební údaje (Zálohová faktura)</h2>
-                    <p>Prosím uhraďte částku <strong>${order.total} Kč</strong>.</p>
-                    <table style="width: 100%; max-width: 400px; margin: 10px 0; text-align: left;">
-                       <tr><td style="padding: 5px;">Číslo účtu:</td><td style="padding: 5px; font-weight: bold;">3524601011/3030</td></tr>
-                       <tr><td style="padding: 5px;">Částka:</td><td style="padding: 5px; font-weight: bold;">${order.total} Kč</td></tr>
-                       <tr><td style="padding: 5px;">Variabilní symbol:</td><td style="padding: 5px; font-weight: bold;">${vs}</td></tr>
-                    </table>
-                </div>`;
-        } else if (order.payment === 'faktura') {
-             paymentDetailsHtml = `
-                <div style="margin-top: 30px; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h2 style="border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; font-size: 16px;">Platba na fakturu</h2>
-                    <p>Fakturu se splatností Vám zašleme společně s expedicí zboží.</p>
-                </div>`;
-        }
-        
-        // List of items
+        // --- HTML GENERATION START ---
+
+        // 1. Header with Logo
+        const headerHtml = `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://i.imgur.com/b4WFqRi.png" alt="Magnetify" style="height: 40px; width: auto; display: block; margin: 0 auto;">
+            </div>
+            <p style="font-size: 16px; margin: 0 0 15px 0; color: #1e293b; text-align: center;">
+                Děkujeme za vaši objednávku, zde je její souhrn:
+            </p>
+        `;
+
+        // 2. Items Table
         const itemsHtml = `
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 5px; font-family: sans-serif;">
                 <thead>
-                    <tr style="background-color: #f1f5f9;">
-                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Produkt</th>
-                        <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Ks</th>
-                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Cena</th>
+                    <tr style="background-color: #f1f5f9; font-size: 13px;">
+                        <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;">Produkt</th>
+                        <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e2e8f0;">Ks</th>
+                        <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e2e8f0;">Cena</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody style="font-size: 14px;">
                     ${order.items.map(item => `
                         <tr>
-                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.product.name} <br><span style="font-size: 12px; color: #666;">${item.variant ? item.variant.name : ''}</span></td>
-                            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-                            <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.price * item.quantity} Kč</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+                                <strong style="color: #334155;">${item.product.name}</strong>
+                                ${item.variant ? `<br><span style="font-size: 12px; color: #64748b;">${item.variant.name}</span>` : ''}
+                            </td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">${item.quantity}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">${item.price * item.quantity} Kč</td>
                         </tr>
                     `).join('')}
                     <tr>
-                        <td colspan="2" style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Doprava:</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${order.shippingCost} Kč</td>
+                        <td colspan="2" style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0; color: #64748b;">Mezisoučet:</td>
+                        <td style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">${order.subtotal} Kč</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Platba:</td>
-                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">${order.paymentCost} Kč</td>
+                        <td colspan="2" style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0; color: #64748b;">Doprava (${order.shipping === 'zasilkovna' ? 'Zásilkovna' : order.shipping === 'posta' ? 'Česká pošta' : 'Osobní odběr'}):</td>
+                        <td style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">${order.shippingCost} Kč</td>
                     </tr>
-                    <tr style="background-color: #f8fafc; font-weight: bold;">
-                        <td colspan="2" style="padding: 10px; text-align: right;">Celkem:</td>
-                        <td style="padding: 10px; text-align: right; color: #0066FF;">${order.total} Kč</td>
+                    <tr>
+                        <td colspan="2" style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0; color: #64748b;">Platba:</td>
+                        <td style="padding: 8px 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">${order.paymentCost} Kč</td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td colspan="2" style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 16px;">Celkem k úhradě:</td>
+                        <td style="padding: 12px 10px; text-align: right; font-weight: bold; font-size: 16px; color: #0066FF;">${order.total} Kč</td>
                     </tr>
                 </tbody>
             </table>
         `;
 
-        const additionalInfoHtml = order.contact.additionalInfo ? 
-            `<div style="margin-top: 20px; padding: 15px; background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px;">
-                <strong>Poznámka k objednávce:</strong><br>
-                ${order.contact.additionalInfo.replace(/\n/g, '<br>')}
-             </div>` : '';
-        
-        // Construct address block with optional company info
+        // 3. Payment Details
+        let paymentDetailsHtml = '';
+        if (order.payment === 'prevodem') {
+            paymentDetailsHtml = `
+                <div style="margin-top: 15px; padding: 15px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #0369a1; border-bottom: 1px solid #bae6fd; padding-bottom: 5px;">Platební údaje</h3>
+                    <p style="margin: 0 0 5px 0; font-size: 14px;">Prosím o úhradu na účet:</p>
+                    <table style="width: 100%; max-width: 300px; font-size: 14px; margin-bottom: 10px;">
+                       <tr><td style="padding: 2px 0; color: #555;">Číslo účtu:</td><td style="padding: 2px 0; font-weight: bold;">3524601011/3030</td></tr>
+                       <tr><td style="padding: 2px 0; color: #555;">Částka:</td><td style="padding: 2px 0; font-weight: bold;">${order.total} Kč</td></tr>
+                       <tr><td style="padding: 2px 0; color: #555;">VS:</td><td style="padding: 2px 0; font-weight: bold;">${vs}</td></tr>
+                    </table>
+                    <p style="margin: 0; font-size: 13px; font-weight: bold; color: #0284c7;">
+                        Na objednávce budeme pracovat po připsání peněz na účet.
+                    </p>
+                </div>`;
+        } else if (order.payment === 'faktura') {
+             paymentDetailsHtml = `
+                <div style="margin-top: 15px; padding: 15px; background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 15px; color: #0369a1;">Platba na fakturu</h3>
+                    <p style="margin: 0; font-size: 14px;">Fakturu se splatností Vám zašleme společně s expedicí zboží.</p>
+                </div>`;
+        }
+
+        // 4. Shipping & Billing Address
         let addressBlock = `<strong>${order.contact.firstName} ${order.contact.lastName}</strong><br>`;
         if (order.company.isCompany) {
             addressBlock += `<strong>${order.company.companyName}</strong><br>IČO: ${order.company.ico}<br>${order.company.dic ? `DIČ: ${order.company.dic}<br>` : ''}`;
         }
         addressBlock += `${order.contact.street}<br>${order.contact.zip} ${order.contact.city}`;
+        if (order.contact.phone) {
+            addressBlock += `<br>Tel: ${order.contact.phone}`;
+        }
 
-        let shippingInfoHtml = `<div style="margin-top: 20px;"><strong>Fakturační adresa:</strong><br>${addressBlock}</div>`;
+        let shippingInfoHtml = `
+            <div style="margin-top: 15px; font-size: 13px; color: #334155; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                <div style="margin-bottom: 10px;">
+                    <strong style="font-size: 14px; display: block; margin-bottom: 4px;">Fakturační údaje:</strong>
+                    ${addressBlock}
+                </div>`;
         
         if (order.shipping === 'zasilkovna' && order.packetaPoint) {
-            shippingInfoHtml += `<div style="margin-top: 10px;"><strong>Výdejní místo (Zásilkovna):</strong><br>${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}</div>`;
+            shippingInfoHtml += `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+                    <strong style="font-size: 14px; display: block; margin-bottom: 4px;">Vybrané výdejní místo:</strong>
+                    ${order.packetaPoint.name}<br>${order.packetaPoint.street}, ${order.packetaPoint.city}
+                </div>`;
         }
+        shippingInfoHtml += `</div>`;
+
+        // 5. Additional Info
+         const additionalInfoHtml = order.contact.additionalInfo ? 
+            `<div style="margin-top: 15px; padding: 10px; background-color: #fffbeb; border: 1px solid #fcd34d; border-radius: 5px; font-size: 13px;">
+                <strong>Poznámka k objednávce:</strong><br>
+                ${order.contact.additionalInfo.replace(/\n/g, '<br>')}
+             </div>` : '';
+
+        // 6. Invoice Note
+        const invoiceNoticeHtml = `<p style="margin-top:10px; font-size: 12px; color: #94a3b8; text-align: center;">Daňový doklad (fakturu) Vám zašleme elektronicky po vyřízení objednávky.</p>`;
         
-        // Generate photos section
+        // 7. Photos List
          const ownerPhotosHtml = order.items
             .filter(item => item.photos && item.photos.length > 0)
             .map(item => {
-                const photoListHtml = `<ol style="margin-top: 5px; padding-left: 20px; font-size: 13px; color: #555;">` +
-                    item.photos.map((photo, index) => `<li><a href="${photo.url}" target="_blank">${photo.name || 'Soubor ' + (index + 1)}</a></li>`).join('') +
+                const photoListHtml = `<ol style="margin: 5px 0 0 0; padding-left: 20px; font-size: 12px; color: #555;">` +
+                    item.photos.map((photo, index) => `<li><a href="${photo.url}" target="_blank" style="color: #2563eb; text-decoration: none;">${photo.name || 'Soubor ' + (index + 1)}</a></li>`).join('') +
                     `</ol>`;
-                
-                const groupLink = item.photoGroupId ? `<br><a href="https://uploadcare.com/app/projects/85038abaf5d3d8c4b919/groups/${item.photoGroupId}/" style="font-size: 12px; color: #2563eb;">(Otevřít skupinu souborů)</a>` : '';
-
                 return `
-                    <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <div style="padding: 5px 0;">
                         <strong>${item.product.name}</strong>
                         ${photoListHtml}
-                        ${groupLink}
                     </div>`;
             }).join('');
 
         const photosSectionHtml = ownerPhotosHtml ? 
-            `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #f1f5f9; padding: 10px; font-weight: bold;">Nahraná tisková data</div>
+            `<div style="margin-top: 20px; padding: 10px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+                <div style="font-weight: bold; margin-bottom: 5px; color: #475569;">Nahraná tisková data:</div>
                 ${ownerPhotosHtml}
              </div>`
             : '';
-        
-        // COMBINE EVERYTHING INTO ONE HTML BLOCK FOR THE TEMPLATE
-        const fullDetailHtml = `
-            ${itemsHtml}
-            ${shippingInfoHtml}
-            ${additionalInfoHtml}
-            ${paymentDetailsHtml}
-            ${invoiceNoticeHtml}
-            ${photosSectionHtml}
+
+        // 8. Footer
+        const footerHtml = `
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #334155;">
+                S pozdravem,<br>
+                <strong style="color: #0B1121; font-size: 16px;">Tým Magnetify</strong>
+                <br>
+                <a href="https://magnetify.cz" style="color: #2563eb; font-size: 12px; text-decoration: none;">www.magnetify.cz</a>
+            </div>
+        `;
+
+        // Full Message Assembly
+        const fullMessageHtml = `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                ${headerHtml}
+                ${itemsHtml}
+                ${paymentDetailsHtml}
+                ${shippingInfoHtml}
+                ${additionalInfoHtml}
+                ${invoiceNoticeHtml}
+                ${photosSectionHtml}
+                ${footerHtml}
+            </div>
         `;
 
         // Public key must be passed in options for robustness
         const emailJsOptions = { publicKey: 'sVd3x5rH1tZu6JGUR' };
 
         // 1. Customer Email Params
-        // Explicitly map variables to avoid confusion
         const customerParams = {
             order_number: order.orderNumber,
             subject_line: `Potvrzení objednávky č. ${order.orderNumber}`,
             to_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            to_email: order.contact.email, // The main destination for customer
-            email: order.contact.email,    // Fallback for templates using {{email}}
             
-            // Content
-            message: fullDetailHtml,
-            shipping_details_html: fullDetailHtml,
+            // KEY FIX: "email" must be mapped correctly for the "To Email" field in EmailJS template
+            email: order.contact.email,    
+            to_email: order.contact.email, // Redundant but safe
+
+            // Granular HTML parts (for EmailJS drag-and-drop templates)
+            header_html: headerHtml,
+            items_html: itemsHtml,
+            payment_details_html: paymentDetailsHtml,
+            shipping_address_html: shippingInfoHtml,
+            photos_confirmation_html: photosSectionHtml,
+            invoice_html: invoiceNoticeHtml,
+            footer_html: footerHtml,
+
+            // Raw data for templates
+            subtotal: order.subtotal,
+            shipping_cost: order.shippingCost,
+            payment_cost: order.paymentCost,
+            total: order.total,
+            shipping_method: order.shipping === 'zasilkovna' ? 'Zásilkovna' : order.shipping === 'posta' ? 'Česká pošta' : 'Osobní odběr',
+            
+            // Full message (for standard templates using {{message}})
+            message: fullMessageHtml,
             
             // Headers
             from_name: 'Magnetify',
@@ -261,36 +328,24 @@ const CheckoutPage: React.FC = () => {
         };
 
         // 2. Admin Email Params
-        // Explicitly set TO address to admin, and REPLY-TO to customer
         const adminParams = {
-            order_number: order.orderNumber,
+            ...customerParams,
             subject_line: `Nová objednávka č. ${order.orderNumber} (${order.contact.firstName} ${order.contact.lastName})`,
             to_name: 'Admin',
-            to_email: 'objednavky@magnetify.cz', // The main destination for admin
-            email: 'objednavky@magnetify.cz',    // Fallback
-            
-            // Content
-            message: fullDetailHtml,
-            shipping_details_html: fullDetailHtml,
-            
-            // Headers
-            from_name: 'Magnetify E-shop',
-            reply_to: order.contact.email, // Reply to the customer directly
-            
-            // Extra meta data for admin reference
-            customer_name: `${order.contact.firstName} ${order.contact.lastName}`,
-            customer_email: order.contact.email
+            to_email: 'objednavky@magnetify.cz', 
+            email: 'objednavky@magnetify.cz', // Override to send to admin
+            reply_to: order.contact.email,
         };
 
-        // 1. Send to Customer - USING GMAIL SERVICE service_2pkoish
+        // 1. Send to Customer
         const customerPromise = window.emailjs.send(
             'service_2pkoish', 
-            'template_n389n7r', // Order Confirmation Magnetify
+            'template_n389n7r', 
             customerParams,
             emailJsOptions
         );
 
-        // 2. Send to Admin (Copy) - USING GMAIL SERVICE service_2pkoish
+        // 2. Send to Admin (Copy)
         const adminPromise = window.emailjs.send(
             'service_2pkoish',
             'template_n389n7r',
@@ -298,14 +353,11 @@ const CheckoutPage: React.FC = () => {
             emailJsOptions
         );
 
-        // We use Promise.allSettled to attempt both emails regardless if one fails
         const results = await Promise.allSettled([customerPromise, adminPromise]);
         
-        // Check if at least one failed and log it
         const rejected = results.filter(r => r.status === 'rejected');
         if (rejected.length > 0) {
             console.warn("Some emails failed to send:", rejected);
-            // Only throw if both failed
             if (rejected.length === 2) {
                 throw new Error("Nepodařilo se odeslat potvrzovací emaily.");
             }
@@ -339,20 +391,16 @@ const CheckoutPage: React.FC = () => {
         }
 
         // Determine the correct name for the subject (contact/invoice)
-        // If it's a company, use company name. If not, use first + last name.
         const subjectName = order.company.isCompany && order.company.companyName 
             ? order.company.companyName 
             : `${order.contact.firstName} ${order.contact.lastName}`;
 
-        // Structured payload for easy mapping in Make.com
         const payload = {
             orderNumber: order.orderNumber,
             created: new Date().toISOString(),
             email: order.contact.email,
-            // Guaranteed field for Fakturoid Subject Name to prevent 422 error
+            phone: order.contact.phone,
             subjectName: subjectName,
-            
-            // Billing object - Use this for Fakturoid Invoice Address
             billing: {
                 name: subjectName,
                 street: order.contact.street,
@@ -363,11 +411,11 @@ const CheckoutPage: React.FC = () => {
                 dic: order.company.isCompany ? order.company.dic.trim() : '',
                 isCompany: order.company.isCompany
             },
-            // Contact person object - Use this for "Contact Person" in CRM
             contactPerson: {
                 firstName: order.contact.firstName,
                 lastName: order.contact.lastName,
-                email: order.contact.email
+                email: order.contact.email,
+                phone: order.contact.phone
             },
             shipping: {
                 method: order.shipping,
@@ -385,10 +433,10 @@ const CheckoutPage: React.FC = () => {
             items: invoiceItems,
             total: order.total,
             note: order.contact.additionalInfo,
-            agreedToTerms: order.agreedToTerms // Passed to webhook for records
+            agreedToTerms: order.agreedToTerms,
+            marketingConsent: order.marketingConsent
         };
         
-        // Return the fetch promise so we can await it
         return fetch(MAKE_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -404,6 +452,7 @@ const CheckoutPage: React.FC = () => {
         if (!data.firstName) errors.firstName = 'Jméno je povinné.';
         if (!data.lastName) errors.lastName = 'Příjmení je povinné.';
         if (!data.email) errors.email = 'Email je povinný.';
+        if (!data.phone) errors.phone = 'Telefon je povinný.';
         if (!data.street) errors.street = 'Ulice je povinná.';
         if (!data.city) errors.city = 'Město je povinné.';
         if (!data.zip) errors.zip = 'PSČ je povinné.';
@@ -435,6 +484,7 @@ const CheckoutPage: React.FC = () => {
                     firstName: data.firstName,
                     lastName: data.lastName,
                     email: data.email,
+                    phone: data.phone,
                     street: data.street,
                     city: data.city,
                     zip: data.zip,
@@ -455,19 +505,19 @@ const CheckoutPage: React.FC = () => {
                 shippingCost: shippingCost,
                 paymentCost: paymentCost,
                 orderNumber: orderNumber,
-                agreedToTerms: agreedToTerms
+                agreedToTerms: agreedToTerms,
+                marketingConsent: marketingConsent
             };
             
             try {
-                // 1. Trigger Make Webhook FIRST (Critical Data Persistence)
+                // 1. Trigger Make Webhook
                 try {
                     await triggerMakeWebhook(orderDetails);
                 } catch (webhookError) {
                     console.error("Make webhook failed:", webhookError);
-                    // We continue even if webhook fails
                 }
 
-                // 2. Send Email Notifications (Secondary)
+                // 2. Send Email Notifications
                 try {
                     await sendEmailNotifications(orderDetails);
                 } catch (emailError) {
@@ -539,9 +589,8 @@ const CheckoutPage: React.FC = () => {
                         <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
                             <FormInput name="firstName" label="Jméno kontaktní osoby" value={formData.firstName} onChange={handleFormChange} error={formErrors.firstName} required />
                             <FormInput name="lastName" label="Příjmení" value={formData.lastName} onChange={handleFormChange} error={formErrors.lastName} required />
-                            <div className="sm:col-span-2">
-                                <FormInput name="email" label="Email" type="email" value={formData.email} onChange={handleFormChange} error={formErrors.email} required />
-                            </div>
+                            <FormInput name="email" label="Email" type="email" value={formData.email} onChange={handleFormChange} error={formErrors.email} required />
+                            <FormInput name="phone" label="Telefon" type="tel" value={formData.phone} onChange={handleFormChange} error={formErrors.phone} required />
                              <div className="sm:col-span-2">
                                 <FormInput name="street" label="Ulice a č.p." value={formData.street} onChange={handleFormChange} error={formErrors.street} required />
                             </div>
@@ -623,6 +672,23 @@ const CheckoutPage: React.FC = () => {
                         </dl>
                         
                         <div className="mt-6">
+                            <div className="flex items-start mb-4">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="marketing-consent"
+                                        name="marketing-consent"
+                                        type="checkbox"
+                                        checked={marketingConsent}
+                                        onChange={(e) => setMarketingConsent(e.target.checked)}
+                                        className="focus:ring-brand-primary h-4 w-4 text-brand-primary border-gray-300 rounded cursor-pointer"
+                                    />
+                                </div>
+                                <div className="ml-3 text-sm">
+                                    <label htmlFor="marketing-consent" className="font-medium text-gray-700 cursor-pointer select-none">
+                                        Souhlasím s použitím mnou objednaných produktů pro marketingové účely (např. na sociální sítě Magnetify).
+                                    </label>
+                                </div>
+                            </div>
                             <div className="flex items-start mb-4">
                                 <div className="flex items-center h-5">
                                     <input
