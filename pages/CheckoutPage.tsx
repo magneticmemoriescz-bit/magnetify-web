@@ -77,6 +77,64 @@ const CheckoutPage: React.FC = () => {
     const paymentCosts: { [key: string]: number } = { 'prevodem': 0, 'faktura': 0, 'dobirka': 30 };
     const total = subtotal + (shippingMethod ? shippingCosts[shippingMethod] : 0) + (paymentMethod ? paymentCosts[paymentMethod] : 0);
 
+    // FUNKCE PRO ODESLÁNÍ DAT DO MAKE.COM
+    const triggerMakeWebhook = async (order: OrderDetails) => {
+        if (!MAKE_WEBHOOK_URL) return;
+
+        // Strukturovaná data pro snadné mapování v Make/Fakturoidu
+        const makePayload = {
+            order_number: order.orderNumber,
+            created_at: new Date().toISOString(),
+            total: order.total,
+            currency: 'CZK',
+            // Fakturační údaje (přímo pro Fakturoid)
+            billing: {
+                name: order.company.isCompany ? order.company.companyName : `${order.contact.firstName} ${order.contact.lastName}`,
+                street: order.contact.street,
+                city: order.contact.city,
+                zip: order.contact.zip,
+                ico: order.company.ico,
+                dic: order.company.dic,
+                is_company: order.company.isCompany
+            },
+            // Kontaktní údaje
+            contact: {
+                first_name: order.contact.firstName,
+                last_name: order.contact.lastName,
+                email: order.contact.email,
+                phone: order.contact.phone,
+                street: order.contact.street,
+                city: order.contact.city,
+                zip: order.contact.zip
+            },
+            shipping: {
+                method: order.shipping,
+                point_name: order.packetaPoint?.name || null,
+                point_id: order.packetaPoint?.id || null,
+                cost: order.shippingCost
+            },
+            payment: {
+                method: order.payment,
+                cost: order.paymentCost
+            },
+            items: order.items.map(item => ({
+                name: item.product.name,
+                variant: item.variant?.name || null,
+                quantity: item.quantity,
+                price_unit: item.price,
+                price_total: item.price * item.quantity,
+                photo_urls: item.photos.map(p => p.url)
+            })),
+            marketing_consent: order.marketingConsent
+        };
+
+        return fetch(MAKE_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(makePayload)
+        });
+    };
+
     const sendEmailNotifications = async (order: OrderDetails) => {
         if (!window.emailjs) return;
 
@@ -85,7 +143,6 @@ const CheckoutPage: React.FC = () => {
         const navyColor = "#0B1121";
         const fullName = `${order.contact.firstName} ${order.contact.lastName}`;
 
-        // Pomocné komponenty HTML
         const itemsTable = `
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: sans-serif;">
                 <thead>
@@ -124,7 +181,6 @@ const CheckoutPage: React.FC = () => {
             </div>
         `;
 
-        // 1. ŠABLONA PRO ZÁKAZNÍKA
         const customerHtml = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px;">
                 <div style="text-align: center; margin-bottom: 25px;"><img src="${logoUrl}" alt="Magnetify.cz" style="height: 60px;"></div>
@@ -152,7 +208,6 @@ const CheckoutPage: React.FC = () => {
             </div>
         `;
 
-        // 2. ŠABLONA PRO ADMINA (VÁS)
         const adminHtml = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid ${navyColor};">
                 <h1 style="color: ${navyColor}; margin: 0 0 10px 0;">NOVÁ OBJEDNÁVKA: ${order.orderNumber}</h1>
@@ -186,7 +241,6 @@ const CheckoutPage: React.FC = () => {
         `;
 
         try {
-            // Odeslání zákazníkovi
             await window.emailjs.send('service_2pkoish', 'template_n389n7r', {
                 to_email: order.contact.email,
                 subject: `Potvrzení objednávky č. ${order.orderNumber} | Magnetify.cz`,
@@ -195,7 +249,6 @@ const CheckoutPage: React.FC = () => {
                 message_html: customerHtml
             });
 
-            // Odeslání adminovi
             await window.emailjs.send('service_2pkoish', 'template_n389n7r', {
                 to_email: 'objednavky@magnetify.cz',
                 subject: `[ADMIN] Nová objednávka ${order.orderNumber} - ${order.contact.lastName}`,
@@ -208,15 +261,6 @@ const CheckoutPage: React.FC = () => {
         }
     };
 
-    const triggerMakeWebhook = async (order: OrderDetails) => {
-        if (!MAKE_WEBHOOK_URL) return;
-        return fetch(MAKE_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...order, created: new Date().toISOString() })
-        });
-    };
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         let errors: { [key: string]: string } = {};
@@ -226,7 +270,7 @@ const CheckoutPage: React.FC = () => {
         if (!formData.phone) errors.phone = 'Telefon je povinný.';
         if (!shippingMethod) errors.shipping = 'Vyberte dopravu.';
         if (!paymentMethod) errors.payment = 'Vyberte platbu.';
-        if (!agreedToTerms) errors.terms = 'Musíte souhlasit s podmínkami.';
+        if (!agreedToTerms) errors.terms = 'Musíte souhlasit s obchodními podmínkami.';
 
         setFormErrors(errors);
 
@@ -285,7 +329,7 @@ const CheckoutPage: React.FC = () => {
                         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 shadow-sm">
                              <label className="flex items-center cursor-pointer group">
                                 <input type="checkbox" checked={isCompany} onChange={(e) => setIsCompany(e.target.checked)} className="h-5 w-5 text-brand-primary rounded focus:ring-brand-primary border-gray-300" />
-                                <span className="ml-3 font-bold text-brand-navy uppercase text-sm tracking-wider">Fakturační údaje (IČO / DIČ)</span>
+                                <span className="ml-3 font-bold text-brand-navy text-sm uppercase tracking-wide">Nakupuji na IČO</span>
                             </label>
                             {isCompany && (
                                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -343,22 +387,48 @@ const CheckoutPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            <div className="border-t pt-6 mt-6 space-y-4">
-                                <div className="flex justify-between font-black text-3xl pt-6 text-brand-primary border-t border-brand-primary/10 mt-4"><span>CELKEM</span><span>{total} Kč</span></div>
+                            <div className="border-t pt-4 mt-6 space-y-4">
+                                <div className="flex justify-between font-bold text-xl pt-4 text-brand-primary border-t border-brand-primary/10 mt-4">
+                                    <span>Celkem</span>
+                                    <span>{total} Kč</span>
+                                </div>
                                 <p className="text-[10px] text-gray-400 text-right uppercase tracking-widest font-bold">Nejsme plátci DPH</p>
                             </div>
                             
-                            <div className="mt-10 space-y-4">
-                                <label className="flex items-start cursor-pointer bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                                    <input type="checkbox" checked={marketingConsent} onChange={(e) => setMarketingConsent(e.target.checked)} className="mt-1 h-5 w-5 text-brand-primary rounded" />
-                                    <span className="ml-3 text-[11px] font-bold text-brand-navy leading-tight uppercase">Souhlasím se zveřejněním pro reklamu</span>
-                                </label>
-                                <label className="flex items-start cursor-pointer">
-                                    <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} className="mt-1 h-5 w-5 text-brand-primary rounded" />
-                                    <span className="ml-3 text-[12px] text-gray-600">Souhlas s <Link to="/obchodni-podminky" className="underline font-bold" target="_blank">podmínkami</Link></span>
-                                </label>
+                            <div className="mt-10 space-y-6">
+                                <div className="space-y-4">
+                                    <label className="flex items-start cursor-pointer group">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={agreedToTerms} 
+                                            onChange={(e) => setAgreedToTerms(e.target.checked)} 
+                                            className="mt-1 h-5 w-5 text-brand-primary rounded border-gray-300 focus:ring-brand-primary" 
+                                        />
+                                        <span className="ml-3 text-sm text-gray-800 leading-tight">
+                                            <strong>Souhlasím s</strong> <Link to="/obchodni-podminky" className="text-brand-primary underline hover:text-blue-700" target="_blank">obchodními podmínkami</Link> *
+                                        </span>
+                                    </label>
+                                    
+                                    <label className="flex items-start cursor-pointer group">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={marketingConsent} 
+                                            onChange={(e) => setMarketingConsent(e.target.checked)} 
+                                            className="mt-1 h-5 w-5 text-brand-primary rounded border-gray-300 focus:ring-brand-primary" 
+                                        />
+                                        <span className="ml-3 text-sm text-gray-400 leading-tight">
+                                            Souhlasím se zveřejněním produktů pro reklamní účely (např. na sociálních sítích)
+                                        </span>
+                                    </label>
+                                </div>
+                                
                                 {formErrors.terms && <p className="text-red-600 text-xs font-bold text-center">{formErrors.terms}</p>}
-                                <button type="submit" disabled={isSubmitting} className="w-full bg-brand-primary text-white font-black py-4 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 text-lg uppercase">
+                                
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting} 
+                                    className="w-full bg-brand-primary text-white font-black py-4 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 text-lg uppercase"
+                                >
                                     {isSubmitting ? 'Zpracovávám...' : 'Odeslat objednávku'}
                                 </button>
                             </div>
