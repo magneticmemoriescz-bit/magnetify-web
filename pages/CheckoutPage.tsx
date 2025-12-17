@@ -77,17 +77,14 @@ const CheckoutPage: React.FC = () => {
     const paymentCosts: { [key: string]: number } = { 'prevodem': 0, 'faktura': 0, 'dobirka': 30 };
     const total = subtotal + (shippingMethod ? shippingCosts[shippingMethod] : 0) + (paymentMethod ? paymentCosts[paymentMethod] : 0);
 
-    // FUNKCE PRO ODESLÁNÍ DAT DO MAKE.COM
     const triggerMakeWebhook = async (order: OrderDetails) => {
         if (!MAKE_WEBHOOK_URL) return;
 
-        // Strukturovaná data pro snadné mapování v Make/Fakturoidu
         const makePayload = {
             order_number: order.orderNumber,
             created_at: new Date().toISOString(),
             total: order.total,
             currency: 'CZK',
-            // Fakturační údaje (přímo pro Fakturoid)
             billing: {
                 name: order.company.isCompany ? order.company.companyName : `${order.contact.firstName} ${order.contact.lastName}`,
                 street: order.contact.street,
@@ -97,7 +94,6 @@ const CheckoutPage: React.FC = () => {
                 dic: order.company.dic,
                 is_company: order.company.isCompany
             },
-            // Kontaktní údaje
             contact: {
                 first_name: order.contact.firstName,
                 last_name: order.contact.lastName,
@@ -107,6 +103,7 @@ const CheckoutPage: React.FC = () => {
                 city: order.contact.city,
                 zip: order.contact.zip
             },
+            notes: order.contact.additionalInfo,
             shipping: {
                 method: order.shipping,
                 point_name: order.packetaPoint?.name || null,
@@ -121,7 +118,7 @@ const CheckoutPage: React.FC = () => {
                 name: item.product.name,
                 variant: item.variant?.name || null,
                 quantity: item.quantity,
-                price_unit: item.price,
+                unit_price: item.price, // OPRAVENO pro Make.com/Fakturoid
                 price_total: item.price * item.quantity,
                 photo_urls: item.photos.map(p => p.url)
             })),
@@ -143,7 +140,7 @@ const CheckoutPage: React.FC = () => {
         const navyColor = "#0B1121";
         const fullName = `${order.contact.firstName} ${order.contact.lastName}`;
 
-        const itemsTable = `
+        const itemsTable = (includeLinks: boolean) => `
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: sans-serif;">
                 <thead>
                     <tr style="background: ${navyColor}; color: #ffffff;">
@@ -158,6 +155,7 @@ const CheckoutPage: React.FC = () => {
                             <td style="padding: 12px; font-size: 14px;">
                                 <strong>${item.product.name}</strong>
                                 ${item.variant ? `<br><span style="color: #718096; font-size: 12px;">Varianta: ${item.variant.name}</span>` : ''}
+                                ${includeLinks ? `<br>${item.photos.map((p, i) => `<a href="${p.url}" style="color: ${primaryColor}; font-size: 11px; text-decoration: underline; margin-right: 8px;">Foto ${i+1}</a>`).join('')}` : ''}
                             </td>
                             <td style="padding: 12px; text-align: center; font-size: 14px; color: #4a5568;">${item.quantity} ks</td>
                             <td style="padding: 12px; text-align: right; font-size: 14px; font-weight: bold; color: ${navyColor};">${item.price * item.quantity} Kč</td>
@@ -172,6 +170,7 @@ const CheckoutPage: React.FC = () => {
                 <strong style="font-size: 16px; color: ${navyColor};">${fullName}</strong><br>
                 ${order.company.isCompany ? `<span style="color: ${primaryColor}; font-weight: bold;">${order.company.companyName}</span><br>IČO: ${order.company.ico}<br>` : ''}
                 ${order.contact.street}<br>${order.contact.zip} ${order.contact.city}<br>
+                <span style="color: ${primaryColor}; font-weight: bold;">Email: ${order.contact.email}</span><br>
                 <span style="color: ${primaryColor}; font-weight: bold;">Tel: ${order.contact.phone}</span>
                 ${order.shipping === 'zasilkovna' && order.packetaPoint ? `
                     <div style="margin-top: 15px; padding: 10px; background: #ebf8ff; border-left: 4px solid ${primaryColor}; border-radius: 4px;">
@@ -181,11 +180,18 @@ const CheckoutPage: React.FC = () => {
             </div>
         `;
 
+        const notesBox = order.contact.additionalInfo ? `
+            <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; font-family: sans-serif;">
+                <strong style="color: #92400e; font-size: 14px;">Poznámka k objednávce:</strong><br>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #78350f;">${order.contact.additionalInfo}</p>
+            </div>
+        ` : '';
+
         const customerHtml = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px;">
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border: 1px solid #edf2f7;">
                 <div style="text-align: center; margin-bottom: 25px;"><img src="${logoUrl}" alt="Magnetify.cz" style="height: 60px;"></div>
-                <h1 style="color: ${navyColor}; text-align: center; font-size: 24px; margin-bottom: 10px;">Děkujeme za objednávku!</h1>
-                <p style="text-align: center; color: #4a5568; margin-bottom: 30px;">Vaši objednávku č. <strong>${order.orderNumber}</strong> jsme přijali a již se na ni těšíme.</p>
+                <h1 style="color: ${navyColor}; text-align: center; font-size: 24px; margin-bottom: 10px;">Objednávka přijata</h1>
+                <p style="text-align: center; color: #4a5568; margin-bottom: 30px;">Dobrý den, Vaši objednávku č. <strong>${order.orderNumber}</strong> jsme v pořádku přijali a začínáme na ní pracovat.</p>
                 
                 ${order.payment === 'prevodem' ? `
                     <div style="background: #f0f9ff; padding: 25px; border: 2px solid #bae6fd; border-radius: 16px; margin-bottom: 30px; text-align: center;">
@@ -197,9 +203,10 @@ const CheckoutPage: React.FC = () => {
                 ` : ''}
 
                 <h3 style="color: ${navyColor}; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">Shrnutí objednávky</h3>
-                ${itemsTable}
+                ${itemsTable(true)}
+                ${notesBox}
                 
-                <h3 style="color: ${navyColor}; border-bottom: 1px solid #edf2f7; padding-bottom: 10px;">Doručovací údaje</h3>
+                <h3 style="color: ${navyColor}; border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-top: 30px;">Doručovací údaje</h3>
                 ${addressBox}
 
                 <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #edf2f7; text-align: center; font-size: 12px; color: #a0aec0;">
@@ -217,9 +224,10 @@ const CheckoutPage: React.FC = () => {
 
                 <h3>Zákazník & Adresa:</h3>
                 ${addressBox}
+                ${notesBox}
 
                 <h3>Produkty k výrobě:</h3>
-                ${itemsTable}
+                ${itemsTable(true)}
                 <div style="text-align: right; font-size: 18px; font-weight: bold;">CELKEM: ${order.total} Kč</div>
 
                 <div style="margin-top: 30px; padding: 20px; background: #edf2f7; border-radius: 12px;">
@@ -348,6 +356,10 @@ const CheckoutPage: React.FC = () => {
                             <div className="sm:col-span-2"><FormInput name="street" label="Ulice a č.p." value={formData.street} onChange={handleFormChange} error={formErrors.street} /></div>
                             <FormInput name="city" label="Město" value={formData.city} onChange={handleFormChange} error={formErrors.city} />
                             <FormInput name="zip" label="PSČ" value={formData.zip} onChange={handleFormChange} error={formErrors.zip} />
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Poznámka k objednávce</label>
+                                <textarea name="additionalInfo" value={formData.additionalInfo} onChange={handleFormChange} rows={3} className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm border py-2.5 px-3" placeholder="Zde nám můžete nechat vzkaz..."></textarea>
+                            </div>
                         </div>
 
                         <div>
@@ -369,8 +381,8 @@ const CheckoutPage: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-brand-navy text-xl mb-4">Platba</h3>
                             <div className="space-y-3">
-                                <RadioCard title="Bankovní převod" price="Zdarma" checked={paymentMethod === 'prevodem'} onChange={() => setPaymentMethod('prevodem')} />
-                                <RadioCard title="Dobírka" price="30 Kč" checked={paymentMethod === 'dobirka'} onChange={() => setPaymentMethod('dobirka')} />
+                                <RadioCard title="Bankovní převod" price="Zdarma" checked={paymentMethod === 'prevodem'} onChange={() => setPaymentMethod('prevodem'} />
+                                <RadioCard title="Dobírka" price="30 Kč" checked={paymentMethod === 'dobirka'} onChange={() => setPaymentMethod('dobirka'} />
                                 {formErrors.payment && <p className="text-red-500 text-xs mt-1">{formErrors.payment}</p>}
                             </div>
                         </div>
