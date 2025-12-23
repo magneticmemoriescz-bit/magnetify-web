@@ -118,7 +118,7 @@ const CheckoutPage: React.FC = () => {
                 name: item.product.name,
                 variant: item.variant?.name || null,
                 quantity: item.quantity,
-                unit_price: item.price, // OPRAVENO pro Make.com/Fakturoid
+                unit_price: item.price,
                 price_total: item.price * item.quantity,
                 photo_urls: item.photos.map(p => p.url)
             })),
@@ -155,7 +155,7 @@ const CheckoutPage: React.FC = () => {
                             <td style="padding: 12px; font-size: 14px;">
                                 <strong>${item.product.name}</strong>
                                 ${item.variant ? `<br><span style="color: #718096; font-size: 12px;">Varianta: ${item.variant.name}</span>` : ''}
-                                ${includeLinks ? `<br>${item.photos.map((p, i) => `<a href="${p.url}" style="color: ${primaryColor}; font-size: 11px; text-decoration: underline; margin-right: 8px;">Foto ${i+1}</a>`).join('')}` : ''}
+                                ${includeLinks ? `<br>${item.photos.map((p, i) => `<a href="${p.url}" style="color: ${primaryColor}; font-size: 11px; text-decoration: underline; margin-right: 8px;">Soubor ${i+1}</a>`).join('')}` : ''}
                             </td>
                             <td style="padding: 12px; text-align: center; font-size: 14px; color: #4a5568;">${item.quantity} ks</td>
                             <td style="padding: 12px; text-align: right; font-size: 14px; font-weight: bold; color: ${navyColor};">${item.price * item.quantity} Kč</td>
@@ -231,13 +231,13 @@ const CheckoutPage: React.FC = () => {
                 <div style="text-align: right; font-size: 18px; font-weight: bold;">CELKEM: ${order.total} Kč</div>
 
                 <div style="margin-top: 30px; padding: 20px; background: #edf2f7; border-radius: 12px;">
-                    <h3 style="margin-top: 0; color: ${primaryColor};">TISKOVÁ DATA KE STAŽENÍ:</h3>
+                    <h3 style="margin-top: 0; color: ${primaryColor};">TISKOVÁ DATA KE STAŽENÍ (Cloudinary):</h3>
                     ${order.items.map(item => `
                         <div style="margin-bottom: 15px; border-bottom: 1px solid #cbd5e0; padding-bottom: 10px;">
                             <strong style="font-size: 14px;">${item.product.name}:</strong><br>
                             ${item.photos.map((p, i) => `
                                 <a href="${p.url}" target="_blank" style="display: inline-block; background: ${primaryColor}; color: white; padding: 8px 12px; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold; margin: 5px 5px 0 0;">
-                                    STÁHNOUT FOTO ${i+1}
+                                    STÁHNOUT SOUBOR ${i+1}
                                 </a>
                             `).join('')}
                         </div>
@@ -381,8 +381,8 @@ const CheckoutPage: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-brand-navy text-xl mb-4">Platba</h3>
                             <div className="space-y-3">
-                                <RadioCard title="Bankovní převod" price="Zdarma" checked={paymentMethod === 'prevodem'} onChange={() => setPaymentMethod('prevodem'} />
-                                <RadioCard title="Dobírka" price="30 Kč" checked={paymentMethod === 'dobirka'} onChange={() => setPaymentMethod('dobirka'} />
+                                <RadioCard title="Bankovní převod" price="Zdarma" checked={paymentMethod === 'prevodem'} onChange={() => setPaymentMethod('prevodem')} />
+                                <RadioCard title="Dobírka" price="30 Kč" checked={paymentMethod === 'dobirka'} onChange={() => setPaymentMethod('dobirka')} />
                                 {formErrors.payment && <p className="text-red-500 text-xs mt-1">{formErrors.payment}</p>}
                             </div>
                         </div>
