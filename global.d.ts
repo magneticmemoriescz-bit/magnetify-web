@@ -1,10 +1,9 @@
-
 export {};
 
 declare global {
     interface Window {
         Packeta: any;
-        uploadcare: any;
+        cloudinary: any;
         emailjs: any;
         gtag: (...args: any[]) => void;
         dataLayer: any[];
