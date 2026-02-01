@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
@@ -34,6 +35,8 @@ const ProductDetailPage: React.FC = () => {
             // Set default quantity to 50 for Merch, otherwise 1
             if (currentProduct.id === 'promo-magnets') {
                 setQuantity(50);
+            } else if (currentProduct.id === 'magnetic-business-cards') {
+                setQuantity(1); // Business cards are handled via variants mainly
             } else {
                 setQuantity(1);
             }
@@ -103,13 +106,10 @@ const ProductDetailPage: React.FC = () => {
     const getQuantityOptions = () => {
         if (isMerch) {
             const options = [];
-            // Start at 50, go to 100 by 10s
             for(let i = 50; i <= 100; i+=10) options.push(i);
-            // 150 to 500 by 50s
             for(let i = 150; i <= 500; i+=50) options.push(i);
             return options;
         } else {
-            // Standard 1-50
             return Array.from({length: 50}, (_, i) => i + 1);
         }
     };
@@ -134,7 +134,8 @@ const ProductDetailPage: React.FC = () => {
                         <h1 className="text-3xl font-extrabold tracking-tight text-dark-gray">{product.name}</h1>
                         <div className="mt-3">
                             <p className="text-3xl font-bold text-brand-primary">{displayPrice} Kč <span className="text-sm font-normal text-gray-500">bez DPH</span></p>
-                            {(isMerch || isBusinessCards) && <p className="text-sm text-gray-500 mt-1">Cena za 1 balení / vybraný počet kusů</p>}
+                            {isBusinessCards && <p className="text-sm text-gray-500 mt-1">Cena za balení dle vybraného množství (cca 25 Kč/ks)</p>}
+                            {isMerch && <p className="text-sm text-gray-500 mt-1">Cena za 1 kus</p>}
                         </div>
                         <div className="mt-6">
                             <h3 className="sr-only">Description</h3>
@@ -157,7 +158,7 @@ const ProductDetailPage: React.FC = () => {
                                     </fieldset>
                                      {(isMerch || isBusinessCards) && (
                                         <div className="mt-3">
-                                            <Link to="/contact" className="text-sm text-brand-primary hover:underline flex items-center font-medium">
+                                            <Link to="/kontakt" className="text-sm text-brand-primary hover:underline flex items-center font-medium">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
