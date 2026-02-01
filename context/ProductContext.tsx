@@ -31,10 +31,16 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
         for (const storedProduct of storedProducts) {
             const initialProduct = initialProductsMap.get(storedProduct.id);
             if (initialProduct) {
-                // Product is defined in code. Sync its variants.
-                // This preserves any other edits (price, name, etc.) from the admin panel.
-                if (JSON.stringify(storedProduct.variants) !== JSON.stringify(initialProduct.variants)) {
+                // Check if basic data in code changed (prices, names, descriptions)
+                const priceChanged = storedProduct.price !== initialProduct.price;
+                const variantsChanged = JSON.stringify(storedProduct.variants) !== JSON.stringify(initialProduct.variants);
+                const descChanged = storedProduct.description !== initialProduct.description;
+
+                if (priceChanged || variantsChanged || descChanged) {
+                    storedProduct.price = initialProduct.price;
                     storedProduct.variants = initialProduct.variants;
+                    storedProduct.description = initialProduct.description;
+                    storedProduct.shortDescription = initialProduct.shortDescription;
                     needsUpdateInStorage = true;
                 }
                 finalProducts.push(storedProduct);
@@ -55,7 +61,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
       } else {
         // No products in storage, so we use the initial list.
         finalProducts = INITIAL_PRODUCTS;
-        needsUpdateInStorage = true; // Needs to be saved to localStorage for the first time
+        needsUpdateInStorage = true; 
       }
 
       if (needsUpdateInStorage) {
@@ -66,12 +72,11 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     } catch (error) {
       console.error("Failed to load or migrate products from localStorage", error);
-      // In case of any error, fallback to the default products from the code.
       setProducts(INITIAL_PRODUCTS);
     } finally {
       setLoading(false);
     }
-  }, []); // The empty dependency array ensures this logic runs only once on initial app load.
+  }, []);
 
   const updateProducts = useCallback((newProducts: Product[]) => {
     setProducts(newProducts);
@@ -96,7 +101,6 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
           const text = event.target?.result;
           if (typeof text === 'string') {
             const importedProducts = JSON.parse(text);
-            // Basic validation can be added here
             if (Array.isArray(importedProducts)) {
               updateProducts(importedProducts);
               resolve();
