@@ -120,7 +120,7 @@ const ProductDetailPage: React.FC = () => {
                 title={product.name} 
                 description={product.shortDescription}
                 image={product.imageUrl}
-                url={`https://magnetify.cz/produkty/${product.id}`}
+                url={`https://magneticmemories.cz/produkty/${product.id}`}
             />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                 <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
@@ -134,7 +134,7 @@ const ProductDetailPage: React.FC = () => {
                         <h1 className="text-3xl font-extrabold tracking-tight text-dark-gray">{product.name}</h1>
                         <div className="mt-3">
                             <p className="text-3xl font-bold text-brand-primary">{displayPrice} Kč <span className="text-sm font-normal text-gray-500">bez DPH</span></p>
-                            {isMerch && <p className="text-sm text-gray-500 mt-1">Cena za 1 kus</p>}
+                            {(isMerch || isBusinessCards) && <p className="text-sm text-gray-500 mt-1">Cena za 1 balení / vybraný počet kusů</p>}
                         </div>
                         <div className="mt-6">
                             <h3 className="sr-only">Description</h3>
@@ -144,7 +144,7 @@ const ProductDetailPage: React.FC = () => {
                         <form className="mt-6" onSubmit={(e) => e.preventDefault()}>
                             {product.variants && (
                                 <div className="mt-8">
-                                    {!isBusinessCards && <h3 className="text-sm text-dark-gray font-medium mb-4">Vyberte variantu</h3>}
+                                    <h3 className="text-sm text-dark-gray font-medium mb-4">Vyberte variantu</h3>
                                     <fieldset>
                                         <div className="flex flex-nowrap overflow-x-auto pb-2 gap-4 no-scrollbar">
                                             {product.variants.map((variant) => (
@@ -155,20 +155,20 @@ const ProductDetailPage: React.FC = () => {
                                             ))}
                                         </div>
                                     </fieldset>
-                                     {isMerch && (
+                                     {(isMerch || isBusinessCards) && (
                                         <div className="mt-3">
-                                            <Link to="/kontakt" className="text-sm text-brand-primary hover:underline flex items-center font-medium">
+                                            <Link to="/contact" className="text-sm text-brand-primary hover:underline flex items-center font-medium">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
-                                                Poptat jiný rozměr
+                                                Poptat jiný rozměr či množství
                                             </Link>
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* Quantity Selector - Moved immediately after variants */}
+                            {/* Quantity Selector */}
                             {!isBusinessCards && (
                                 <div className="mt-6">
                                     <h3 className="text-sm text-dark-gray font-medium">Počet kusů</h3>
