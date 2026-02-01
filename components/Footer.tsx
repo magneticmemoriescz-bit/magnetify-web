@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { NAV_LINKS, FOOTER_INFO_LINKS, FOOTER_LEGAL_LINKS } from '../constants';
@@ -11,7 +10,7 @@ export const Footer: React.FC = () => {
             <div className="col-span-2">
                 <img 
                     src="https://i.imgur.com/b4WFqRi.png" 
-                    alt="Magnetify.cz" 
+                    alt="Magnetic Memories" 
                     className="h-16 md:h-24 w-auto object-contain" 
                 />
                 <p className="mt-4 text-gray-400 text-base max-w-sm">
@@ -51,7 +50,7 @@ export const Footer: React.FC = () => {
             </div>
         </div>
         <div className="mt-12 border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-base text-gray-500 text-center sm:text-left">&copy; {new Date().getFullYear()} Magnetify.cz Všechna práva vyhrazena.</p>
+            <p className="text-base text-gray-500 text-center sm:text-left">&copy; {new Date().getFullYear()} Magnetic Memories. Všechna práva vyhrazena.</p>
              <div className="text-center sm:text-right mt-4 sm:mt-0">
                 <Link to="/admin" className="text-sm text-gray-600 hover:text-gray-400 transition-colors">Administrace</Link>
             </div>
