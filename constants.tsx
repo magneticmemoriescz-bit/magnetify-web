@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product } from './types';
 
@@ -13,19 +12,19 @@ export const PRODUCTS: Product[] = [
   {
     id: 'magnetic-business-cards',
     name: 'Magnetické vizitky',
-    price: 1250,
+    price: 62.5,
     shortDescription: 'Vizitky, které neskončí v koši. Rozměr 90x50 nebo 85x55 mm.',
-    description: 'Odlište se od konkurence. Magnetická vizitka zůstane klientovi na očích – <strong>vhodné na lednici v kuchyňce nebo magnetickou nástěnku v kanceláři</strong>. Ideální pro řemeslníky, servisy, rozvozy jídla a služby.<br><br><strong>Rozměry:</strong> Standardní formát 90x50 mm nebo 85x55 mm.',
+    description: 'Odlište se od konkurence. Magnetická vizitka zůstane klientovi na očích – <strong>vhodné na lednici v kuchyňce nebo magnetickou nástěnku v kanceláři</strong>. Ideální pro řemeslníky, servisy, rozvozy jídla a služby.<br><br><strong>Rozměry:</strong> Standardní formát 90x50 mm nebo 85x55 mm.<br><br>Cena je uvedena za 1 kus při odběru 50 ks.',
     imageUrl: 'https://i.imgur.com/YeFWk8H.png',
     gallery: [
       'https://i.imgur.com/YeFWk8H.png',
     ],
     requiredPhotos: 1,
     variants: [
-        { id: '50-pcs', name: '50 ks', photoCount: 1, price: 1250 },
-        { id: '100-pcs', name: '100 ks', photoCount: 1, price: 2450 },
-        { id: '200-pcs', name: '200 ks', photoCount: 1, price: 4750 },
-        { id: '500-pcs', name: '500 ks', photoCount: 1, price: 12000 },
+        { id: '50-pcs', name: '50 ks', photoCount: 1, price: 3125 },
+        { id: '100-pcs', name: '100 ks', photoCount: 1, price: 6125 },
+        { id: '200-pcs', name: '200 ks', photoCount: 1, price: 11875 },
+        { id: '500-pcs', name: '500 ks', photoCount: 1, price: 30000 },
     ]
   },
   {
@@ -47,7 +46,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'promo-magnets',
     name: 'Reklamní magnety (Merch)',
-    price: 25,
+    price: 62.5,
     shortDescription: 'Drobné předměty pro podporu značky.',
     description: 'Rozdávejte svou značku. Malé, cenově dostupné a efektivní reklamní předměty. <strong>Ideální jako dárky pro zákazníky, zaměstnance nebo na veletrhy.</strong><br><br>Ceny jsou uvedeny za 1 kus.',
     imageUrl: 'https://i.imgur.com/jHvipIX.png',
@@ -56,15 +55,15 @@ export const PRODUCTS: Product[] = [
     ],
     requiredPhotos: 1,
     variants: [
-      { id: 'square-5x5', name: 'Čtverec 5x5 cm', photoCount: 1, price: 25 },
-      { id: 'rect-5x10', name: 'Obdélník 5x10 cm', photoCount: 1, price: 50 },
-      { id: 'square-10x10', name: 'Čtverec 10x10 cm', photoCount: 1, price: 75 },
+      { id: 'square-5x5', name: 'Čtverec 5x5 cm', photoCount: 1, price: 62.5 },
+      { id: 'rect-5x10', name: 'Obdélník 5x10 cm', photoCount: 1, price: 125 },
+      { id: 'square-10x10', name: 'Čtverec 10x10 cm', photoCount: 1, price: 187.5 },
     ]
   },
   {
     id: 'car-magnet-logo',
     name: 'Magnetické logo na auto',
-    price: 750,
+    price: 1125,
     shortDescription: 'Proměňte své firemní auto v pojízdnou reklamu.',
     description: 'Efektivní reklama, která neničí lak vašeho vozu. Magnetické fólie s vysokou přilnavostí jsou ideální pro dočasné označení firemních vozidel. <strong>Logo je kdykoliv snímatelné, což oceníte například při soukromých cestách.</strong> Odolné vůči povětrnostním vlivům a UV záření.',
     imageUrl: 'https://i.imgur.com/LiYGCeu.png',
@@ -73,9 +72,9 @@ export const PRODUCTS: Product[] = [
     ],
     requiredPhotos: 1,
     variants: [
-      { id: 'a4', name: 'A4 (30x21 cm)', photoCount: 1, price: 750 },
-      { id: 'a3', name: 'A3 (42x30 cm)', photoCount: 1, price: 1200 },
-      { id: 'a5', name: 'A5 (21x15 cm)', photoCount: 1, price: 600 },
+      { id: 'a4', name: 'A4 (30x21 cm)', photoCount: 1, price: 1125 },
+      { id: 'a3', name: 'A3 (42x30 cm)', photoCount: 1, price: 1800 },
+      { id: 'a5', name: 'A5 (21x15 cm)', photoCount: 1, price: 900 },
     ]
   }
 ];
